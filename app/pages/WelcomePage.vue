@@ -1,7 +1,6 @@
 <template>
   <Page class="page">
     <GridLayout rows="*, auto, auto, *" class="container">
-
       <!-- квадрат -->
       <GridLayout row="1" class="square">
         <Label text="⭐" class="star" />
@@ -13,35 +12,33 @@
         <Label text="InterviewIQ" class="title" />
         <Label text="Prepare • Practice • Perform" class="subtitle" />
       </StackLayout>
-
     </GridLayout>
   </Page>
 </template>
 
 <script lang="ts">
-import { defineComponent, nextTick, onMounted } from "vue";
+import { defineComponent, onMounted } from "nativescript-vue";
 import { Frame } from "@nativescript/core";
 
 export default defineComponent({
   name: "Home",
   setup() {
     onMounted(() => {
-    setTimeout(() => {
-      const frame = Frame.topmost();
-      if (frame) {
-        // Переход на экран HowItWorks.vue
-        frame.navigate(() => require("./HowItWorks").default);
-      }
-    }, 3000); // 3 секунды задержка
+      setTimeout(() => {
+        const frame = Frame.topmost();
+        if (frame) {
+          // Переход на экран HowItWorks.vue
+          frame.navigate(() => require("./HowItWorks").default);
+        }
+      }, 3000); // 3 секунды задержка
     });
-  }
+  },
 });
 </script>
 
 <style scoped>
-
 .page {
-  background: linear-gradient(135deg, #4F46E5, #7C3AED);
+  background: linear-gradient(135deg, #4f46e5, #7c3aed);
 }
 
 .container {
@@ -90,9 +87,8 @@ export default defineComponent({
 
 .subtitle {
   font-size: 14;
-  color: #E5E7EB;
+  color: #e5e7eb;
   font-family: "Poppins";
   text-align: center;
 }
-
 </style>

@@ -50,7 +50,7 @@
 </template>
 
 <script lang="ts">
-import { defineComponent, ref } from "vue";
+import { defineComponent, ref } from "nativescript-vue";
 
 export default defineComponent({
   name: "PersonalizeExperience",
