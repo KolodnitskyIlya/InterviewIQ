@@ -1,10 +1,11 @@
 <template>
   <Page actionBarHidden="true" class="page">
-    <StackLayout class="container" spacing="20">
-      <Label text="Personalize Your Experience" class="title" />
+    <StackLayout class="container">
+      <Label text="Personalize Your Experience" class="title" textWrap="true" />
       <Label
         text="Tell us about yourself to get tailored interview questions"
         class="subtitle"
+        textWrap="true"
       />
 
       <Label text="Select Job Role" class="label" />
@@ -15,36 +16,42 @@
         class="dropdownButton"
         @tap="toggleRoleList"
       />
-      <StackLayout v-if="showRoleList" class="dropdownList" spacing="5">
+      <StackLayout v-if="showRoleList" class="dropdownList">
         <Button
           v-for="(role, index) in roles"
           :key="index"
           :text="role"
-          class="optionButton"
+          class="optionButton dropdownOptionButton"
           @tap="selectRole(index)"
         />
       </StackLayout>
 
-      <Label text="Experience Level" class="label" />
-      <StackLayout class="experienceOptions" spacing="10">
+      <Label text="Experience Level" class="label experienceLabel" />
+      <StackLayout class="experienceOptions">
         <Button
           text="Junior (0-2 years)"
           :class="
-            selectedExperience === 'Junior' ? 'selectedButton' : 'optionButton'
+            selectedExperience === 'Junior'
+              ? 'selectedButton experienceButton'
+              : 'optionButton experienceButton'
           "
           @tap="selectExperience('Junior')"
         />
         <Button
           text="Middle (3-5 years)"
           :class="
-            selectedExperience === 'Middle' ? 'selectedButton' : 'optionButton'
+            selectedExperience === 'Middle'
+              ? 'selectedButton experienceButton'
+              : 'optionButton experienceButton'
           "
           @tap="selectExperience('Middle')"
         />
         <Button
           text="Senior (6+ years)"
           :class="
-            selectedExperience === 'Senior' ? 'selectedButton' : 'optionButton'
+            selectedExperience === 'Senior'
+              ? 'selectedButton experienceButton'
+              : 'optionButton experienceButton'
           "
           @tap="selectExperience('Senior')"
         />
@@ -113,12 +120,14 @@ export default defineComponent({
 
 .container {
   padding: 30;
+  justify-content: center;
 }
 
 .title {
   font-size: 28;
   font-weight: 700;
   color: #111827;
+  margin-bottom: 50;
 }
 
 .subtitle {
@@ -131,6 +140,7 @@ export default defineComponent({
   font-size: 14;
   font-weight: 600;
   color: #111827;
+  margin-bottom: 10;
 }
 
 .dropdownButton {
@@ -146,6 +156,7 @@ export default defineComponent({
   background-color: #ffffff;
   border-radius: 12;
   padding: 5;
+  margin-top: 8;
 }
 
 .optionButton {
@@ -157,6 +168,14 @@ export default defineComponent({
   text-align: left;
 }
 
+.dropdownOptionButton {
+  margin-bottom: 8;
+}
+
+.dropdownOptionButton:last-child {
+  margin-bottom: 0;
+}
+
 .selectedButton {
   background-color: #7c3aed;
   color: white;
@@ -166,22 +185,16 @@ export default defineComponent({
   text-align: left;
 }
 
-.experienceOptions Button.optionButton {
-  background-color: #ffffff;
-  border-radius: 12;
-  padding: 12;
-  color: #111827;
-  font-size: 16;
-  text-align: left;
+.experienceLabel {
+  margin-top: 20;
 }
 
-.experienceOptions Button.selectedButton {
-  background-color: #7c3aed;
-  color: white;
-  border-radius: 12;
-  padding: 12;
-  font-size: 16;
-  text-align: left;
+.experienceButton {
+  margin-bottom: 10;
+}
+
+.experienceButton:last-child {
+  margin-bottom: 0;
 }
 
 .continueButton {

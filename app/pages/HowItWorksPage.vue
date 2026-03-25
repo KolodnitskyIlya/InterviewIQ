@@ -3,14 +3,8 @@
     <GridLayout rows="auto,*,auto" class="container">
       <Label text="How it Works" class="title" row="0" />
 
-      <GridLayout row="1" rows="*,*,*" class="steps" columns="*">
-        <FlexboxLayout
-          class="step"
-          orientation="row"
-          row="0"
-          column="0"
-          alignItems="center"
-        >
+      <StackLayout row="1" class="steps" verticalAlignment="middle">
+        <FlexboxLayout class="step" orientation="row" alignItems="center">
           <StackLayout class="emojiBox step1">
             <Label :text="'💬'" class="icon" />
           </StackLayout>
@@ -24,13 +18,7 @@
           </StackLayout>
         </FlexboxLayout>
 
-        <FlexboxLayout
-          class="step"
-          orientation="row"
-          row="1"
-          column="0"
-          alignItems="center"
-        >
+        <FlexboxLayout class="step" orientation="row" alignItems="center">
           <StackLayout class="emojiBox step2">
             <Label :text="'🎤'" class="icon" />
           </StackLayout>
@@ -48,13 +36,7 @@
           </StackLayout>
         </FlexboxLayout>
 
-        <FlexboxLayout
-          class="step"
-          orientation="row"
-          row="2"
-          column="0"
-          alignItems="center"
-        >
+        <FlexboxLayout class="step" orientation="row" alignItems="center">
           <StackLayout class="emojiBox step3">
             <Label :text="'✅'" class="icon" />
           </StackLayout>
@@ -71,7 +53,7 @@
             />
           </StackLayout>
         </FlexboxLayout>
-      </GridLayout>
+      </StackLayout>
 
       <StackLayout row="2" class="bottomButton">
         <Button text="Continue" class="continueButton" @tap="goNext" />
@@ -103,6 +85,8 @@ export default defineComponent({
   width: 100%;
   height: 100%;
   padding: 30;
+  justify-content: center;
+  align-items: center;
 }
 
 .title {
@@ -113,14 +97,15 @@ export default defineComponent({
   margin-bottom: 10;
 }
 
-.steps {
-  row-gap: 25;
-}
-
 .step {
   flex-direction: row;
   align-items: center;
   justify-content: flex-start;
+  margin-bottom: 65;
+}
+
+.step:last-child {
+  margin-bottom: 0;
 }
 
 .emojiBox {
