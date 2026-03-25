@@ -1,45 +1,62 @@
 <template>
-  <Page class="page">
+  <Page actionBarHidden="true" class="page">
     <GridLayout rows="auto,*,auto" class="container">
-      <!-- Заголовок -->
       <Label text="How it Works" class="title" row="0" />
 
-      <!-- Шаги -->
-      <GridLayout row="1" rows="*,*,*" class="steps" columns="*">
-        <FlexboxLayout class="step" orientation="row" row="0" column="0" alignItems="center">
+      <StackLayout row="1" class="steps" verticalAlignment="middle">
+        <FlexboxLayout class="step" orientation="row" alignItems="center">
           <StackLayout class="emojiBox step1">
-            <Label text="💬" class="icon"/>
+            <Label :text="'💬'" class="icon" />
           </StackLayout>
           <StackLayout class="textBox">
-            <Label text="Get AI Questions" class="stepTitle" textWrap="true"/>
-            <Label text="Receive personalized interview questions based on your role and experience" class="stepSubtitle" textWrap="true"/>
+            <Label text="Get AI Questions" class="stepTitle" textWrap="true" />
+            <Label
+              text="Receive personalized interview questions based on your role and experience"
+              class="stepSubtitle"
+              textWrap="true"
+            />
           </StackLayout>
         </FlexboxLayout>
 
-        <FlexboxLayout class="step" orientation="row" row="1" column="0" alignItems="center">
+        <FlexboxLayout class="step" orientation="row" alignItems="center">
           <StackLayout class="emojiBox step2">
-            <Label text="🎤" class="icon"/>
+            <Label :text="'🎤'" class="icon" />
           </StackLayout>
           <StackLayout class="textBox">
-            <Label text="Record Your Answer" class="stepTitle" textWrap="true"/>
-            <Label text="Practice with timed responses just like a real interview" class="stepSubtitle" textWrap="true"/>
+            <Label
+              text="Record Your Answer"
+              class="stepTitle"
+              textWrap="true"
+            />
+            <Label
+              text="Practice with timed responses just like a real interview"
+              class="stepSubtitle"
+              textWrap="true"
+            />
           </StackLayout>
         </FlexboxLayout>
 
-        <FlexboxLayout class="step" orientation="row" row="2" column="0" alignItems="center">
+        <FlexboxLayout class="step" orientation="row" alignItems="center">
           <StackLayout class="emojiBox step3">
-            <Label text="✅" class="icon"/>
+            <Label :text="'✅'" class="icon" />
           </StackLayout>
           <StackLayout class="textBox">
-            <Label text="Receive Instant Feedback" class="stepTitle" textWrap="true"/>
-            <Label text="Get detailed insights on your performance and areas to improve" class="stepSubtitle" textWrap="true"/>
+            <Label
+              text="Receive Instant Feedback"
+              class="stepTitle"
+              textWrap="true"
+            />
+            <Label
+              text="Get detailed insights on your performance and areas to improve"
+              class="stepSubtitle"
+              textWrap="true"
+            />
           </StackLayout>
         </FlexboxLayout>
-      </GridLayout>
+      </StackLayout>
 
-      <!-- Кнопка Continue -->
       <StackLayout row="2" class="bottomButton">
-        <Button text="Continue" class="continueButton" @tap="goNext"/>
+        <Button text="Continue" class="continueButton" @tap="goNext" />
       </StackLayout>
     </GridLayout>
   </Page>
@@ -47,28 +64,29 @@
 
 <script lang="ts">
 import { defineComponent } from "nativescript-vue";
-import { Frame } from "@nativescript/core";
+import PersonalizeExperiencePage from "./PersonalizeExperiencePage.vue";
 
 export default defineComponent({
-  name: "HowItWorks",
+  name: "HowItWorksPage",
   methods: {
     goNext() {
-      // Навигация на экран персонализации
-      Frame.topmost().navigate(() => require("./PersonalizeExperience").default);
-    }
-  }
+      this.$navigateTo(PersonalizeExperiencePage);
+    },
+  },
 });
 </script>
 
 <style scoped>
 .page {
-  background-color: #F9FAFB;
+  background-color: #f9fafb;
 }
 
 .container {
   width: 100%;
   height: 100%;
   padding: 30;
+  justify-content: center;
+  align-items: center;
 }
 
 .title {
@@ -79,14 +97,15 @@ export default defineComponent({
   margin-bottom: 10;
 }
 
-.steps {
-  row-gap: 25;
-}
-
 .step {
   flex-direction: row;
   align-items: center;
   justify-content: flex-start;
+  margin-bottom: 65;
+}
+
+.step:last-child {
+  margin-bottom: 0;
 }
 
 .emojiBox {
@@ -101,9 +120,15 @@ export default defineComponent({
   margin-right: 15;
 }
 
-.step1 { background-color: #4F46E5; }
-.step2 { background-color: #7C3AED; }
-.step3 { background-color: #10B981; }
+.step1 {
+  background-color: #4f46e5;
+}
+.step2 {
+  background-color: #7c3aed;
+}
+.step3 {
+  background-color: #10b981;
+}
 
 .icon {
   font-size: 28;
@@ -125,7 +150,7 @@ export default defineComponent({
 
 .stepSubtitle {
   font-size: 14;
-  color: #4B5563;
+  color: #4b5563;
   margin-top: 4;
   text-wrap: true;
 }
@@ -137,7 +162,7 @@ export default defineComponent({
 .continueButton {
   padding: 15;
   border-radius: 20;
-  background: linear-gradient(90deg, #4F46E5, #7C3AED);
+  background: linear-gradient(90deg, #4f46e5, #7c3aed);
   color: white;
   font-size: 18;
   font-weight: 600;
