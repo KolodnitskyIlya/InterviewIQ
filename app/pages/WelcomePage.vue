@@ -21,16 +21,16 @@ import { defineComponent, onMounted } from "nativescript-vue";
 import { Frame } from "@nativescript/core";
 
 export default defineComponent({
-  name: "Home",
+  name: "WelcomePage",
   setup() {
     onMounted(() => {
       setTimeout(() => {
         const frame = Frame.topmost();
         if (frame) {
           // Переход на экран HowItWorks.vue
-          frame.navigate(() => require("./HowItWorks").default);
+          frame.navigate(() => require("./HowItWorksPage").default);
         }
-      }, 3000); // 3 секунды задержка
+      }, 3000);
     });
   },
 });

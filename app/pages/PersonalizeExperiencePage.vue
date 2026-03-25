@@ -1,15 +1,19 @@
 <template>
   <Page class="page">
     <StackLayout class="container" spacing="20">
-
       <!-- Заголовок -->
-      <Label text="Personalize Your Experience" class="title"/>
-      <Label text="Tell us about yourself to get tailored interview questions" class="subtitle"/>
+      <Label text="Personalize Your Experience" class="title" />
+      <Label
+        text="Tell us about yourself to get tailored interview questions"
+        class="subtitle"
+      />
 
       <!-- Выпадающий список ролей -->
-      <Label text="Select Job Role" class="label"/>
+      <Label text="Select Job Role" class="label" />
       <Button
-        :text="selectedRoleIndex >= 0 ? roles[selectedRoleIndex] : 'Select role'"
+        :text="
+          selectedRoleIndex >= 0 ? roles[selectedRoleIndex] : 'Select role'
+        "
         class="dropdownButton"
         @tap="toggleRoleList"
       />
@@ -24,27 +28,33 @@
       </StackLayout>
 
       <!-- Уровень опыта -->
-      <Label text="Experience Level" class="label"/>
+      <Label text="Experience Level" class="label" />
       <StackLayout class="experienceOptions" spacing="10">
         <Button
           text="Junior (0-2 years)"
-          :class="selectedExperience === 'Junior' ? 'selectedButton' : 'optionButton'"
+          :class="
+            selectedExperience === 'Junior' ? 'selectedButton' : 'optionButton'
+          "
           @tap="selectExperience('Junior')"
         />
         <Button
           text="Middle (3-5 years)"
-          :class="selectedExperience === 'Middle' ? 'selectedButton' : 'optionButton'"
+          :class="
+            selectedExperience === 'Middle' ? 'selectedButton' : 'optionButton'
+          "
           @tap="selectExperience('Middle')"
         />
         <Button
           text="Senior (6+ years)"
-          :class="selectedExperience === 'Senior' ? 'selectedButton' : 'optionButton'"
+          :class="
+            selectedExperience === 'Senior' ? 'selectedButton' : 'optionButton'
+          "
           @tap="selectExperience('Senior')"
         />
       </StackLayout>
 
       <!-- Кнопка Continue -->
-      <Button text="Continue" class="continueButton" @tap="goNext"/>
+      <Button text="Continue" class="continueButton" @tap="goNext" />
     </StackLayout>
   </Page>
 </template>
@@ -53,11 +63,16 @@
 import { defineComponent, ref } from "nativescript-vue";
 
 export default defineComponent({
-  name: "PersonalizeExperience",
+  name: "PersonalizeExperiencePage",
   setup() {
-    const roles = ["Frontend Developer", "Backend Developer", "Fullstack Developer", "QA Engineer"];
+    const roles = [
+      "Frontend Developer",
+      "Backend Developer",
+      "Fullstack Developer",
+      "QA Engineer",
+    ];
     const selectedRoleIndex = ref(-1); // индекс выбранной роли
-    const showRoleList = ref(false);   // показывает/скрывает список ролей
+    const showRoleList = ref(false); // показывает/скрывает список ролей
     const selectedExperience = ref(""); // уровень опыта
 
     const toggleRoleList = () => {
@@ -74,7 +89,10 @@ export default defineComponent({
     };
 
     const goNext = () => {
-      console.log("Selected role:", selectedRoleIndex.value >= 0 ? roles[selectedRoleIndex.value] : "None");
+      console.log(
+        "Selected role:",
+        selectedRoleIndex.value >= 0 ? roles[selectedRoleIndex.value] : "None",
+      );
       console.log("Selected experience:", selectedExperience.value || "None");
     };
 
@@ -86,15 +104,15 @@ export default defineComponent({
       toggleRoleList,
       selectRole,
       selectExperience,
-      goNext
+      goNext,
     };
-  }
+  },
 });
 </script>
 
 <style scoped>
 .page {
-  background-color: #F9FAFB;
+  background-color: #f9fafb;
 }
 
 .container {
@@ -109,7 +127,7 @@ export default defineComponent({
 
 .subtitle {
   font-size: 16;
-  color: #6B7280;
+  color: #6b7280;
   margin-bottom: 20;
 }
 
@@ -144,7 +162,7 @@ export default defineComponent({
 }
 
 .selectedButton {
-  background-color: #7C3AED;
+  background-color: #7c3aed;
   color: white;
   border-radius: 12;
   padding: 12;
@@ -162,7 +180,7 @@ export default defineComponent({
 }
 
 .experienceOptions Button.selectedButton {
-  background-color: #7C3AED;
+  background-color: #7c3aed;
   color: white;
   border-radius: 12;
   padding: 12;
@@ -174,7 +192,7 @@ export default defineComponent({
   margin-top: 20;
   padding: 15;
   border-radius: 20;
-  background: linear-gradient(90deg, #4F46E5, #7C3AED);
+  background: linear-gradient(90deg, #4f46e5, #7c3aed);
   color: white;
   font-size: 18;
   font-weight: 600;
