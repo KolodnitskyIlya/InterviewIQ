@@ -1,37 +1,44 @@
 <template>
-  <Page class="page">
+  <Page actionBarHidden="true" class="page">
     <GridLayout rows="*, auto, auto, *" class="container">
-      <!-- квадрат -->
-      <GridLayout row="1" class="square">
-        <Label text="⭐" class="star" />
-        <Label text="🧠" class="brain" />
+      <GridLayout
+        row="1"
+        class="square"
+        horizontalAlignment="center"
+        verticalAlignment="middle"
+      >
+        <Label
+          :text="'⭐'"
+          class="star"
+          horizontalAlignment="right"
+          verticalAlignment="top"
+        />
+        <Label
+          :text="'🧠'"
+          class="brain"
+          horizontalAlignment="center"
+          verticalAlignment="middle"
+        />
       </GridLayout>
 
-      <!-- текст -->
-      <StackLayout row="2" class="textBlock">
+      <StackLayout row="2" class="textBlock" horizontalAlignment="center">
         <Label text="InterviewIQ" class="title" />
-        <Label text="Prepare • Practice • Perform" class="subtitle" />
+        <Label :text="'Prepare • Practice • Perform'" class="subtitle" />
       </StackLayout>
     </GridLayout>
   </Page>
 </template>
 
 <script lang="ts">
-import { defineComponent, onMounted } from "nativescript-vue";
-import { Frame } from "@nativescript/core";
+import { defineComponent } from "nativescript-vue";
+import HowItWorksPage from "./HowItWorksPage.vue";
 
 export default defineComponent({
   name: "WelcomePage",
-  setup() {
-    onMounted(() => {
-      setTimeout(() => {
-        const frame = Frame.topmost();
-        if (frame) {
-          // Переход на экран HowItWorks.vue
-          frame.navigate(() => require("./HowItWorksPage").default);
-        }
-      }, 3000);
-    });
+  mounted() {
+    setTimeout(() => {
+      this.$navigateTo(HowItWorksPage);
+    }, 3000);
   },
 });
 </script>
@@ -46,35 +53,24 @@ export default defineComponent({
   height: 100%;
 }
 
-/* квадрат */
 .square {
   width: 200;
   height: 200;
   background-color: white;
   border-radius: 30;
-  horizontal-align: center;
-  vertical-align: middle;
 }
 
-/* мозг */
 .brain {
   font-size: 90;
-  horizontal-align: center;
-  vertical-align: middle;
 }
 
-/* звезда */
 .star {
   font-size: 20;
-  horizontal-align: right;
-  vertical-align: top;
   margin: 10;
 }
 
-/* текст */
 .textBlock {
   margin-top: 20;
-  horizontal-align: center;
 }
 
 .title {

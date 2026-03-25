@@ -1,10 +1,8 @@
 <template>
-  <Page class="page">
+  <Page actionBarHidden="true" class="page">
     <GridLayout rows="auto,*,auto" class="container">
-      <!-- Заголовок -->
       <Label text="How it Works" class="title" row="0" />
 
-      <!-- Шаги -->
       <GridLayout row="1" rows="*,*,*" class="steps" columns="*">
         <FlexboxLayout
           class="step"
@@ -14,7 +12,7 @@
           alignItems="center"
         >
           <StackLayout class="emojiBox step1">
-            <Label text="💬" class="icon" />
+            <Label :text="'💬'" class="icon" />
           </StackLayout>
           <StackLayout class="textBox">
             <Label text="Get AI Questions" class="stepTitle" textWrap="true" />
@@ -34,7 +32,7 @@
           alignItems="center"
         >
           <StackLayout class="emojiBox step2">
-            <Label text="🎤" class="icon" />
+            <Label :text="'🎤'" class="icon" />
           </StackLayout>
           <StackLayout class="textBox">
             <Label
@@ -58,7 +56,7 @@
           alignItems="center"
         >
           <StackLayout class="emojiBox step3">
-            <Label text="✅" class="icon" />
+            <Label :text="'✅'" class="icon" />
           </StackLayout>
           <StackLayout class="textBox">
             <Label
@@ -75,7 +73,6 @@
         </FlexboxLayout>
       </GridLayout>
 
-      <!-- Кнопка Continue -->
       <StackLayout row="2" class="bottomButton">
         <Button text="Continue" class="continueButton" @tap="goNext" />
       </StackLayout>
@@ -85,16 +82,13 @@
 
 <script lang="ts">
 import { defineComponent } from "nativescript-vue";
-import { Frame } from "@nativescript/core";
+import PersonalizeExperiencePage from "./PersonalizeExperiencePage.vue";
 
 export default defineComponent({
   name: "HowItWorksPage",
   methods: {
     goNext() {
-      // Навигация на экран персонализации
-      Frame.topmost().navigate(
-        () => require("./PersonalizeExperiencePage").default,
-      );
+      this.$navigateTo(PersonalizeExperiencePage);
     },
   },
 });

@@ -1,14 +1,12 @@
 <template>
-  <Page class="page">
+  <Page actionBarHidden="true" class="page">
     <StackLayout class="container" spacing="20">
-      <!-- Заголовок -->
       <Label text="Personalize Your Experience" class="title" />
       <Label
         text="Tell us about yourself to get tailored interview questions"
         class="subtitle"
       />
 
-      <!-- Выпадающий список ролей -->
       <Label text="Select Job Role" class="label" />
       <Button
         :text="
@@ -27,7 +25,6 @@
         />
       </StackLayout>
 
-      <!-- Уровень опыта -->
       <Label text="Experience Level" class="label" />
       <StackLayout class="experienceOptions" spacing="10">
         <Button
@@ -53,7 +50,6 @@
         />
       </StackLayout>
 
-      <!-- Кнопка Continue -->
       <Button text="Continue" class="continueButton" @tap="goNext" />
     </StackLayout>
   </Page>
@@ -71,9 +67,9 @@ export default defineComponent({
       "Fullstack Developer",
       "QA Engineer",
     ];
-    const selectedRoleIndex = ref(-1); // индекс выбранной роли
-    const showRoleList = ref(false); // показывает/скрывает список ролей
-    const selectedExperience = ref(""); // уровень опыта
+    const selectedRoleIndex = ref(-1);
+    const showRoleList = ref(false);
+    const selectedExperience = ref("");
 
     const toggleRoleList = () => {
       showRoleList.value = !showRoleList.value;
@@ -81,7 +77,7 @@ export default defineComponent({
 
     const selectRole = (index: number) => {
       selectedRoleIndex.value = index;
-      showRoleList.value = false; // скрываем список после выбора
+      showRoleList.value = false;
     };
 
     const selectExperience = (level: string) => {

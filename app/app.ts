@@ -1,5 +1,5 @@
 import { createApp } from "nativescript-vue";
 
-import WelcomePage from "./pages/WelcomePage.vue";
+import RootFrame from "./RootFrame.vue";
 
-createApp(WelcomePage).start();
+createApp(RootFrame).start();
