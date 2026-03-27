@@ -63,52 +63,38 @@
 </template>
 
 <script lang="ts">
-import { defineComponent, ref } from "nativescript-vue";
+import { defineComponent } from "nativescript-vue";
+import SignInPage from "./SignInPage.vue";
 
 export default defineComponent({
   name: "PersonalizeExperiencePage",
-  setup() {
-    const roles = [
-      "Frontend Developer",
-      "Backend Developer",
-      "Fullstack Developer",
-      "QA Engineer",
-    ];
-    const selectedRoleIndex = ref(-1);
-    const showRoleList = ref(false);
-    const selectedExperience = ref("");
-
-    const toggleRoleList = () => {
-      showRoleList.value = !showRoleList.value;
-    };
-
-    const selectRole = (index: number) => {
-      selectedRoleIndex.value = index;
-      showRoleList.value = false;
-    };
-
-    const selectExperience = (level: string) => {
-      selectedExperience.value = level;
-    };
-
-    const goNext = () => {
-      console.log(
-        "Selected role:",
-        selectedRoleIndex.value >= 0 ? roles[selectedRoleIndex.value] : "None",
-      );
-      console.log("Selected experience:", selectedExperience.value || "None");
-    };
-
+  data() {
     return {
-      roles,
-      selectedRoleIndex,
-      showRoleList,
-      selectedExperience,
-      toggleRoleList,
-      selectRole,
-      selectExperience,
-      goNext,
+      roles: [
+        "Frontend Developer",
+        "Backend Developer",
+        "Fullstack Developer",
+        "QA Engineer",
+      ],
+      selectedRoleIndex: -1,
+      showRoleList: false,
+      selectedExperience: "",
     };
+  },
+  methods: {
+    toggleRoleList() {
+      this.showRoleList = !this.showRoleList;
+    },
+    selectRole(index: number) {
+      this.selectedRoleIndex = index;
+      this.showRoleList = false;
+    },
+    selectExperience(level: string) {
+      this.selectedExperience = level;
+    },
+    goNext() {
+      this.$navigateTo(SignInPage);
+    },
   },
 });
 </script>
