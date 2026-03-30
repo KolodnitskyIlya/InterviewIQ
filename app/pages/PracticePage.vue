@@ -56,7 +56,10 @@
             </StackLayout>
           </GridLayout>
 
-          <Label text="Select Difficulty" class="sectionTitle difficultyTitle" />
+          <Label
+            text="Select Difficulty"
+            class="sectionTitle difficultyTitle"
+          />
           <StackLayout>
             <GridLayout
               class="difficultyCard"
@@ -84,7 +87,11 @@
           </StackLayout>
 
           <Label text="Time Per Answer" class="sectionTitle timeTitle" />
-          <GridLayout columns="*, auto" class="dropdownField" @tap="toggleTimeList">
+          <GridLayout
+            columns="*, auto"
+            class="dropdownField"
+            @tap="toggleTimeList"
+          >
             <Label
               col="0"
               :text="selectedTime || 'Choose time limit'"
@@ -103,7 +110,11 @@
             />
           </StackLayout>
 
-          <Button text="▷ Start Practice" class="startButton" @tap="startPractice" />
+          <Button
+            text="▷ Start Practice"
+            class="startButton"
+            @tap="startPractice"
+          />
         </StackLayout>
       </ScrollView>
 
@@ -116,11 +127,21 @@
           <Label row="0" text="◎" class="tabIcon activeTabIcon" />
           <Label row="1" text="Practice" class="tabLabel activeTabLabel" />
         </GridLayout>
-        <GridLayout col="2" rows="auto, auto" class="tabItem">
+        <GridLayout
+          col="2"
+          rows="auto, auto"
+          class="tabItem"
+          @tap="openAnalytics"
+        >
           <Label row="0" text="▥" class="tabIcon" />
           <Label row="1" text="Analytics" class="tabLabel" />
         </GridLayout>
-        <GridLayout col="3" rows="auto, auto" class="tabItem" @tap="openProfile">
+        <GridLayout
+          col="3"
+          rows="auto, auto"
+          class="tabItem"
+          @tap="openProfile"
+        >
           <Label row="0" text="◯" class="tabIcon" />
           <Label row="1" text="Profile" class="tabLabel" />
         </GridLayout>
@@ -131,8 +152,10 @@
 
 <script lang="ts">
 import { defineComponent } from "nativescript-vue";
+import AnalyticsPage from "./AnalyticsPage.vue";
 import HomePage from "./HomePage.vue";
 import ProfilePage from "./ProfilePage.vue";
+import QuestionsPage from "./QuestionsPage.vue";
 
 export default defineComponent({
   name: "PracticePage",
@@ -166,6 +189,16 @@ export default defineComponent({
         },
       });
     },
+    openAnalytics() {
+      this.$navigateTo(AnalyticsPage, {
+        clearHistory: true,
+        transition: {
+          name: "slideLeft",
+          duration: 280,
+          curve: "easeInOut",
+        },
+      });
+    },
     selectCategory(category: string) {
       this.selectedCategory = category;
     },
@@ -180,10 +213,18 @@ export default defineComponent({
       this.showTimeList = false;
     },
     startPractice() {
-      console.log("Start practice with:", {
-        category: this.selectedCategory || "none",
-        difficulty: this.selectedDifficulty || "none",
-        timePerAnswer: this.selectedTime || "none",
+      this.$navigateTo(QuestionsPage, {
+        clearHistory: true,
+        props: {
+          currentQuestionIndex: 0,
+          totalQuestions: 3,
+          selectedCategory: this.selectedCategory || "technical",
+        },
+        transition: {
+          name: "slideLeft",
+          duration: 280,
+          curve: "easeInOut",
+        },
       });
     },
   },
@@ -421,3 +462,5 @@ export default defineComponent({
   color: #4f46e5;
 }
 </style>
+
+
