@@ -38,7 +38,12 @@
 
         <GridLayout columns="*, auto" class="infoRow">
           <Label col="0" text="Target Role" class="infoLabel" />
-          <Label col="1" text="ML Engineer" class="infoValue" horizontalAlignment="right" />
+          <Label
+            col="1"
+            text="ML Engineer"
+            class="infoValue"
+            horizontalAlignment="right"
+          />
         </GridLayout>
 
         <GridLayout columns="*, auto" class="infoRow">
@@ -53,7 +58,11 @@
       </StackLayout>
 
       <StackLayout row="3" class="actionsCard">
-        <GridLayout columns="auto, *, auto" class="actionRow" @tap="openSettings">
+        <GridLayout
+          columns="auto, *, auto"
+          class="actionRow"
+          @tap="openSettings"
+        >
           <Label col="0" text="⚙" class="actionIcon" />
           <Label col="1" text="Settings" class="actionText" />
           <Label col="2" text="›" class="chevron" />
@@ -73,7 +82,12 @@
           <Label row="0" text="⌂" class="tabIcon" />
           <Label row="1" text="Home" class="tabLabel" />
         </GridLayout>
-        <GridLayout col="1" rows="auto, auto" class="tabItem" @tap="openPractice">
+        <GridLayout
+          col="1"
+          rows="auto, auto"
+          class="tabItem"
+          @tap="openPractice"
+        >
           <Label row="0" text="◎" class="tabIcon" />
           <Label row="1" text="Practice" class="tabLabel" />
         </GridLayout>
@@ -92,6 +106,7 @@
 
 <script lang="ts">
 import { defineComponent } from "nativescript-vue";
+import AnalyticsPage from "./AnalyticsPage.vue";
 import HomePage from "./HomePage.vue";
 import PracticePage from "./PracticePage.vue";
 import SettingsPage from "./SettingsPage.vue";
@@ -112,6 +127,16 @@ export default defineComponent({
     },
     openPractice() {
       this.$navigateTo(PracticePage, {
+        clearHistory: true,
+        transition: {
+          name: "slideRight",
+          duration: 280,
+          curve: "easeInOut",
+        },
+      });
+    },
+    openAnalytics() {
+      this.$navigateTo(AnalyticsPage, {
         clearHistory: true,
         transition: {
           name: "slideRight",

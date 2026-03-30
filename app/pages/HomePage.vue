@@ -5,7 +5,11 @@
         <StackLayout class="content">
           <StackLayout class="hero">
             <Label text="Good evening," class="greeting" />
-            <Label text="Danil Kolbasenko 👋" class="userName" textWrap="true" />
+            <Label
+              text="Danil Kolbasenko 👋"
+              class="userName"
+              textWrap="true"
+            />
 
             <GridLayout columns="auto, *" class="readinessCard">
               <StackLayout
@@ -29,7 +33,11 @@
               </StackLayout>
 
               <StackLayout col="1" class="readinessInfo">
-                <Label text="Interview Readiness" class="cardTitle" textWrap="true" />
+                <Label
+                  text="Interview Readiness"
+                  class="cardTitle"
+                  textWrap="true"
+                />
                 <Label
                   text="You're doing great! Keep practicing."
                   class="cardSubtitle"
@@ -62,7 +70,11 @@
               </GridLayout>
 
               <StackLayout col="1" class="sessionInfo">
-                <Label text="System Design Practice" class="sessionTitle" textWrap="true" />
+                <Label
+                  text="System Design Practice"
+                  class="sessionTitle"
+                  textWrap="true"
+                />
                 <Label
                   text="Question 7 of 10 • 15 min left"
                   class="sessionMeta"
@@ -81,7 +93,10 @@
 
               <StackLayout class="improvementCard">
                 <StackLayout class="metric">
-                  <FlexboxLayout class="metricHeader" justifyContent="space-between">
+                  <FlexboxLayout
+                    class="metricHeader"
+                    justifyContent="space-between"
+                  >
                     <Label text="Technical Depth" class="metricLabel" />
                     <Label text="68%" class="metricValue" />
                   </FlexboxLayout>
@@ -92,7 +107,10 @@
                 </StackLayout>
 
                 <StackLayout class="metric">
-                  <FlexboxLayout class="metricHeader" justifyContent="space-between">
+                  <FlexboxLayout
+                    class="metricHeader"
+                    justifyContent="space-between"
+                  >
                     <Label text="Communication" class="metricLabel" />
                     <Label text="72%" class="metricValue" />
                   </FlexboxLayout>
@@ -103,7 +121,10 @@
                 </StackLayout>
 
                 <StackLayout class="metric">
-                  <FlexboxLayout class="metricHeader" justifyContent="space-between">
+                  <FlexboxLayout
+                    class="metricHeader"
+                    justifyContent="space-between"
+                  >
                     <Label text="Confidence" class="metricLabel" />
                     <Label text="75%" class="metricValue" />
                   </FlexboxLayout>
@@ -147,7 +168,12 @@
           <Label row="0" text="⌂" class="tabIcon activeTabIcon" />
           <Label row="1" text="Home" class="tabLabel activeTabLabel" />
         </GridLayout>
-        <GridLayout col="1" rows="auto, auto" class="tabItem" @tap="openPractice">
+        <GridLayout
+          col="1"
+          rows="auto, auto"
+          class="tabItem"
+          @tap="openPractice"
+        >
           <Label row="0" text="◎" class="tabIcon" />
           <Label row="1" text="Practice" class="tabLabel" />
         </GridLayout>
@@ -155,7 +181,12 @@
           <Label row="0" text="▥" class="tabIcon" />
           <Label row="1" text="Analytics" class="tabLabel" />
         </GridLayout>
-        <GridLayout col="3" rows="auto, auto" class="tabItem" @tap="openProfile">
+        <GridLayout
+          col="3"
+          rows="auto, auto"
+          class="tabItem"
+          @tap="openProfile"
+        >
           <Label row="0" text="◯" class="tabIcon" />
           <Label row="1" text="Profile" class="tabLabel" />
         </GridLayout>
