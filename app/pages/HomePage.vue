@@ -197,6 +197,7 @@
 
 <script lang="ts">
 import { defineComponent } from "nativescript-vue";
+import AnalyticsPage from "./AnalyticsPage.vue";
 import PracticePage from "./PracticePage.vue";
 import ProfilePage from "./ProfilePage.vue";
 
@@ -205,6 +206,16 @@ export default defineComponent({
   methods: {
     openPractice() {
       this.$navigateTo(PracticePage, {
+        clearHistory: true,
+        transition: {
+          name: "slideLeft",
+          duration: 280,
+          curve: "easeInOut",
+        },
+      });
+    },
+    openAnalytics() {
+      this.$navigateTo(AnalyticsPage, {
         clearHistory: true,
         transition: {
           name: "slideLeft",

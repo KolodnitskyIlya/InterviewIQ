@@ -127,7 +127,12 @@
           <Label row="0" text="◎" class="tabIcon activeTabIcon" />
           <Label row="1" text="Practice" class="tabLabel activeTabLabel" />
         </GridLayout>
-        <GridLayout col="2" rows="auto, auto" class="tabItem">
+        <GridLayout
+          col="2"
+          rows="auto, auto"
+          class="tabItem"
+          @tap="openAnalytics"
+        >
           <Label row="0" text="▥" class="tabIcon" />
           <Label row="1" text="Analytics" class="tabLabel" />
         </GridLayout>
@@ -457,3 +462,5 @@ export default defineComponent({
   color: #4f46e5;
 }
 </style>
+
+

@@ -1,27 +1,45 @@
 <template>
   <Page actionBarHidden="true" class="page">
     <GridLayout rows="auto, *, auto" class="container">
-      <GridLayout row="0" columns="auto, *, auto" class="topBar">
-        <GridLayout col="0" class="closeButton" @tap="closePage">
-          <Label text="×" class="closeIcon" />
+      <StackLayout row="0" class="topBar">
+        <GridLayout columns="42, *, 48" class="headerRow">
+          <GridLayout col="0" class="closeButton" @tap="closePage">
+            <Label text="×" class="closeIcon" />
+          </GridLayout>
+
+          <Label
+            col="1"
+            :text="progressLabel"
+            class="progressLabel"
+            horizontalAlignment="center"
+          />
+
+          <Label
+            col="2"
+            :text="timerText"
+            class="timerLabel"
+            horizontalAlignment="right"
+          />
         </GridLayout>
 
-        <StackLayout col="1" class="progressWrap">
-          <GridLayout columns="auto, *" class="progressHeader">
-            <Label :text="progressLabel" class="progressLabel" />
-            <Label :text="timerText" class="timerLabel" horizontalAlignment="right" />
-          </GridLayout>
-          <GridLayout columns="*, *" class="progressTrack">
-            <StackLayout col="0" :width="progressWidth" class="progressFill" horizontalAlignment="left" />
-          </GridLayout>
-        </StackLayout>
-      </GridLayout>
+        <GridLayout class="progressTrack">
+          <StackLayout
+            :width="progressWidth"
+            class="progressFill"
+            horizontalAlignment="left"
+          />
+        </GridLayout>
+      </StackLayout>
 
       <StackLayout row="1" class="questionSection" verticalAlignment="middle">
         <Label :text="question.category" class="categoryBadge" />
         <StackLayout class="questionCard">
           <Label :text="question.title" class="questionTitle" textWrap="true" />
-          <Label :text="question.description" class="questionSubtitle" textWrap="true" />
+          <Label
+            :text="question.description"
+            class="questionSubtitle"
+            textWrap="true"
+          />
         </StackLayout>
       </StackLayout>
 
@@ -58,17 +76,20 @@ const QUESTIONS = [
   {
     category: "Technical",
     title: "Explain the difference between REST and GraphQL APIs",
-    description: "Provide a comprehensive answer discussing the key differences, use cases, and trade-offs.",
+    description:
+      "Provide a comprehensive answer discussing the key differences, use cases, and trade-offs.",
   },
   {
     category: "Behavioral",
     title: "Tell me about a time you had a conflict in your team",
-    description: "Describe the situation, your actions, and what changed after your intervention.",
+    description:
+      "Describe the situation, your actions, and what changed after your intervention.",
   },
   {
     category: "System Design",
     title: "How would you design a notification service for a mobile app?",
-    description: "Focus on architecture, scaling, delivery guarantees, and monitoring.",
+    description:
+      "Focus on architecture, scaling, delivery guarantees, and monitoring.",
   },
 ];
 
@@ -154,7 +175,12 @@ export default defineComponent({
 }
 
 .topBar {
+  margin-bottom: 12;
+}
+
+.headerRow {
   vertical-align: middle;
+  align-items: center;
 }
 
 .closeButton {
@@ -174,19 +200,15 @@ export default defineComponent({
   text-align: center;
 }
 
-.progressWrap {
-  margin-left: 14;
-}
-
-.progressHeader {
-  margin-bottom: 10;
-}
-
 .progressLabel {
   font-size: 12;
   font-weight: 600;
   color: #111827;
   font-family: "Poppins";
+  text-align: center;
+  padding-right: 8;
+  padding-left: 8;
+  vertical-align: middle;
 }
 
 .timerLabel {
@@ -194,9 +216,12 @@ export default defineComponent({
   font-weight: 600;
   color: #111827;
   font-family: "Poppins";
+  text-align: right;
+  vertical-align: middle;
 }
 
 .progressTrack {
+  margin-top: 12;
   height: 6;
   border-radius: 3;
   background-color: #e5e7eb;
