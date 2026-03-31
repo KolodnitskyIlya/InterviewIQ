@@ -6,18 +6,16 @@
       horizontalAlignment="center"
       verticalAlignment="center"
     >
-      <GridLayout class="progressOuter">
-        <GridLayout class="progressTrack" />
-        <GridLayout class="progressArc" :style="`rotate: ${progressRotation};`" />
-        <GridLayout class="progressInner">
-          <Label
-            :text="valueLabel"
-            class="progressValue"
-            horizontalAlignment="center"
-            verticalAlignment="center"
+      <StackLayout class="scorePanel">
+        <Label :text="valueLabel" class="progressValue" />
+        <GridLayout class="meterTrack">
+          <StackLayout
+            :width="meterWidth"
+            class="meterFill"
+            horizontalAlignment="left"
           />
         </GridLayout>
-      </GridLayout>
+      </StackLayout>
     </StackLayout>
 
     <StackLayout col="1" class="readinessInfo">
@@ -61,8 +59,8 @@ export default defineComponent({
     valueLabel(): string {
       return `${this.clampedValue}%`;
     },
-    progressRotation(): number {
-      return -140 + this.clampedValue * 2.4;
+    meterWidth(): number {
+      return 76 * (this.clampedValue / 100);
     },
   },
 });
@@ -86,49 +84,40 @@ export default defineComponent({
   margin-right: 14;
 }
 
-.progressOuter {
-  width: 108;
-  height: 108;
-  border-radius: 54;
-  justify-content: center;
-  align-items: center;
-}
-
-.progressTrack {
-  width: 108;
-  height: 108;
-  border-width: 7;
-  border-color: #d1d5db;
-  border-radius: 54;
-}
-
-.progressArc {
-  width: 108;
-  height: 108;
-  border-width: 7;
-  border-radius: 54;
-  border-top-color: #14b8a6;
-  border-right-color: #3b82f6;
-  border-bottom-color: #4f46e5;
-  border-left-color: transparent;
-  justify-content: center;
-  align-items: center;
-}
-
-.progressInner {
-  width: 82;
-  height: 82;
-  border-radius: 41;
+.scorePanel {
+  width: 96;
+  height: 96;
+  border-radius: 28;
   background-color: #ede9fe;
-  justify-content: center;
-  align-items: center;
+  border-width: 2;
+  border-color: #c4b5fd;
+  padding-top: 20;
+  padding-right: 10;
+  padding-bottom: 16;
+  padding-left: 10;
 }
 
 .progressValue {
-  font-size: 22;
+  font-size: 24;
   font-weight: 700;
   color: #111827;
   font-family: "Poppins";
+  text-align: center;
+}
+
+.meterTrack {
+  margin-top: 14;
+  width: 76;
+  height: 8;
+  border-radius: 4;
+  background-color: #d1d5db;
+  horizontal-align: center;
+}
+
+.meterFill {
+  height: 8;
+  border-radius: 4;
+  background: linear-gradient(90deg, #14b8a6, #3b82f6, #4f46e5);
 }
 
 .readinessInfo {

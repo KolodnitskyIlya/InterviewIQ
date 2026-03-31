@@ -355,16 +355,14 @@ export default defineComponent({
   font-weight: 600;
   color: #111827;
   text-align: center;
-  line-height: 38;
   font-family: "Poppins";
 }
 
 .questionSubtitle {
-  margin-top: 18;
+  margin-top: 50;
   font-size: 15;
   color: #6b7280;
   text-align: center;
-  line-height: 22;
   font-family: "Poppins";
 }
 

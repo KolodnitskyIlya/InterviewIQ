@@ -11,44 +11,24 @@
         <StackLayout class="content">
           <StackLayout v-if="showBreakdown" class="card radarCard">
             <Label text="Performance Breakdown" class="cardTitle" />
-            <GridLayout
-              columns="*, *, *, *"
-              rows="auto, auto"
-              class="radarGrid"
-            >
-              <Label
-                row="0"
-                col="0"
-                text="Examples"
-                class="axisLabel leftLabel"
-              />
-              <Label
-                row="0"
-                col="1"
-                text="Confidence"
-                class="axisLabel topLabel"
-              />
-              <Label
-                row="0"
-                col="3"
-                text="Clarity"
-                class="axisLabel rightLabel"
-              />
-              <Label
-                row="1"
-                col="0"
-                text="Technical"
-                class="axisLabel bottomLeftLabel"
-              />
-              <Label
-                row="1"
-                col="3"
-                text="Structure"
-                class="axisLabel bottomRightLabel"
-              />
-            </GridLayout>
-            <StackLayout class="radarShapeWrap">
-              <Label text="◈" class="radarShape" />
+            <StackLayout class="breakdownList">
+              <StackLayout
+                v-for="item in breakdownScores"
+                :key="item.label"
+                class="breakdownItem"
+              >
+                <GridLayout columns="*, auto" class="breakdownHeader">
+                  <Label col="0" :text="item.label" class="axisLabel" />
+                  <Label col="1" :text="item.value + '%'" class="axisValue" />
+                </GridLayout>
+                <GridLayout class="breakdownTrack">
+                  <StackLayout
+                    :width="breakdownWidth(item.value)"
+                    class="breakdownFill"
+                    horizontalAlignment="left"
+                  />
+                </GridLayout>
+              </StackLayout>
             </StackLayout>
           </StackLayout>
 
@@ -145,6 +125,13 @@ export default defineComponent({
       flowQuestionIndex: this.currentQuestionIndex,
       isLastQuestion: this.currentQuestionIndex >= this.totalQuestions - 1,
       showBreakdown: this.currentQuestionIndex === 0,
+      breakdownScores: [
+        { label: "Confidence", value: 84 },
+        { label: "Clarity", value: 78 },
+        { label: "Technical", value: 72 },
+        { label: "Structure", value: 68 },
+        { label: "Examples", value: 76 },
+      ],
     };
   },
   mounted() {
@@ -168,6 +155,9 @@ export default defineComponent({
     this.flowActor?.stop();
   },
   methods: {
+    breakdownWidth(value: number) {
+      return 180 * (Math.max(0, Math.min(100, value)) / 100);
+    },
     nextQuestion() {
       if (!this.flowActor) {
         return;
@@ -278,47 +268,47 @@ export default defineComponent({
   font-family: "Poppins";
 }
 
-.radarGrid {
-  margin-top: 10;
+.breakdownList {
+  margin-top: 14;
+}
+
+.breakdownItem {
+  margin-bottom: 12;
+}
+
+.breakdownItem:last-child {
+  margin-bottom: 0;
+}
+
+.breakdownHeader {
+  margin-bottom: 6;
 }
 
 .axisLabel {
-  font-size: 11;
-  color: #9ca3af;
+  font-size: 13;
+  color: #6b7280;
   font-family: "Poppins";
 }
 
-.leftLabel {
-  horizontal-align: left;
+.axisValue {
+  font-size: 13;
+  font-weight: 600;
+  color: #111827;
+  font-family: "Poppins";
+  text-align: right;
 }
 
-.topLabel {
-  horizontal-align: center;
+.breakdownTrack {
+  width: 180;
+  height: 10;
+  border-radius: 5;
+  background-color: #e5e7eb;
 }
 
-.rightLabel {
-  horizontal-align: right;
-}
-
-.bottomLeftLabel {
-  margin-top: 74;
-  horizontal-align: left;
-}
-
-.bottomRightLabel {
-  margin-top: 74;
-  horizontal-align: right;
-}
-
-.radarShapeWrap {
-  align-items: center;
-  margin-top: -8;
-}
-
-.radarShape {
-  font-size: 128;
-  color: #818cf8;
-  text-align: center;
+.breakdownFill {
+  height: 10;
+  border-radius: 5;
+  background: linear-gradient(90deg, #818cf8, #6366f1);
 }
 
 .strengthsCard {
