@@ -110,8 +110,13 @@
 
 <script lang="ts">
 import { defineComponent } from "nativescript-vue";
+import { createActor, type ActorRefFrom } from "xstate";
+
+import { resultsFlowMachine } from "@/features/finish-session";
 import AnalyticsPage from "@/pages/analytics";
 import QuestionsPage from "@/pages/questions";
+
+type ResultsFlowActor = ActorRefFrom<typeof resultsFlowMachine>;
 
 export default defineComponent({
   name: "ResultsPage",
@@ -128,22 +133,58 @@ export default defineComponent({
       type: Number,
       default: 82,
     },
+    timeLimit: {
+      type: String,
+      default: "60 sec",
+    },
   },
-  computed: {
-    isLastQuestion(): boolean {
-      return this.currentQuestionIndex >= this.totalQuestions - 1;
-    },
-    showBreakdown(): boolean {
-      return this.currentQuestionIndex === 0;
-    },
+  data() {
+    return {
+      flowActor: null as ResultsFlowActor | null,
+      flowSubscription: null as { unsubscribe: () => void } | null,
+      flowQuestionIndex: this.currentQuestionIndex,
+      isLastQuestion: this.currentQuestionIndex >= this.totalQuestions - 1,
+      showBreakdown: this.currentQuestionIndex === 0,
+    };
+  },
+  mounted() {
+    const actor = createActor(resultsFlowMachine, {
+      input: {
+        currentQuestionIndex: this.currentQuestionIndex,
+        totalQuestions: this.totalQuestions,
+      },
+    });
+    this.flowActor = actor;
+    this.flowSubscription = actor.subscribe((snapshot) => {
+      const index = snapshot.context.currentQuestionIndex;
+      this.flowQuestionIndex = index;
+      this.isLastQuestion = index >= snapshot.context.totalQuestions - 1;
+      this.showBreakdown = index === 0;
+    });
+    actor.start();
+  },
+  beforeUnmount() {
+    this.flowSubscription?.unsubscribe();
+    this.flowActor?.stop();
   },
   methods: {
     nextQuestion() {
+      if (!this.flowActor) {
+        return;
+      }
+      this.flowActor.send({ type: "NEXT_QUESTION" });
+      const snapshot = this.flowActor.getSnapshot();
+      if (snapshot.matches("completed")) {
+        this.finishSession();
+        return;
+      }
+
       this.$navigateTo(QuestionsPage, {
         clearHistory: true,
         props: {
-          currentQuestionIndex: this.currentQuestionIndex + 1,
+          currentQuestionIndex: snapshot.context.currentQuestionIndex,
           totalQuestions: this.totalQuestions,
+          timeLimit: this.timeLimit,
         },
         transition: {
           name: "slideLeft",
@@ -153,6 +194,7 @@ export default defineComponent({
       });
     },
     finishSession() {
+      this.flowActor?.send({ type: "FINISH_SESSION" });
       this.$navigateTo(AnalyticsPage, {
         clearHistory: true,
         transition: {

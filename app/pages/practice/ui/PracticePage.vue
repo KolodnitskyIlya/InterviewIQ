@@ -30,6 +30,8 @@
           <Button
             text="▷ Start Practice"
             class="startButton"
+            :isEnabled="canStartPractice"
+            :class="canStartPractice ? '' : 'startButtonDisabled'"
             @tap="startPractice"
           />
         </StackLayout>
@@ -48,8 +50,13 @@
 
 <script lang="ts">
 import { defineComponent } from "nativescript-vue";
+import { createActor, type ActorRefFrom } from "xstate";
 
 import type { PracticeCategory, PracticeDifficulty } from "@/entities/practice";
+import {
+  practiceSetupMachine,
+  type PracticeSetupContext,
+} from "@/features/start-practice";
 import AnalyticsPage from "@/pages/analytics";
 import HomePage from "@/pages/home";
 import ProfilePage from "@/pages/profile";
@@ -58,6 +65,8 @@ import BottomNavigation from "@/widgets/bottom-navigation";
 import CategoryPicker from "@/widgets/category-picker";
 import DifficultyPicker from "@/widgets/difficulty-picker";
 import TimerPicker from "@/widgets/timer-picker";
+
+type PracticeSetupActor = ActorRefFrom<typeof practiceSetupMachine>;
 
 export default defineComponent({
   name: "PracticePage",
@@ -69,11 +78,29 @@ export default defineComponent({
   },
   data() {
     return {
-      selectedCategory: "" as PracticeCategory | "",
-      selectedDifficulty: "" as PracticeDifficulty | "",
+      selectedCategory: "" as PracticeSetupContext["selectedCategory"],
+      selectedDifficulty: "" as PracticeSetupContext["selectedDifficulty"],
       selectedTime: "",
+      canStartPractice: false,
       timeOptions: ["30 sec", "45 sec", "60 sec", "90 sec", "120 sec"],
+      practiceActor: null as PracticeSetupActor | null,
+      practiceSubscription: null as { unsubscribe: () => void } | null,
     };
+  },
+  mounted() {
+    const actor = createActor(practiceSetupMachine);
+    this.practiceActor = actor;
+    this.practiceSubscription = actor.subscribe((snapshot) => {
+      this.selectedCategory = snapshot.context.selectedCategory;
+      this.selectedDifficulty = snapshot.context.selectedDifficulty;
+      this.selectedTime = snapshot.context.selectedTime;
+      this.canStartPractice = snapshot.matches("ready");
+    });
+    actor.start();
+  },
+  beforeUnmount() {
+    this.practiceSubscription?.unsubscribe();
+    this.practiceActor?.stop();
   },
   methods: {
     goHome() {
@@ -107,21 +134,25 @@ export default defineComponent({
       });
     },
     selectCategory(category: PracticeCategory) {
-      this.selectedCategory = category;
+      this.practiceActor?.send({ type: "SELECT_CATEGORY", category });
     },
     selectDifficulty(level: PracticeDifficulty) {
-      this.selectedDifficulty = level;
+      this.practiceActor?.send({ type: "SELECT_DIFFICULTY", difficulty: level });
     },
     selectTime(option: string) {
-      this.selectedTime = option;
+      this.practiceActor?.send({ type: "SELECT_TIME", time: option });
     },
     startPractice() {
+      if (!this.canStartPractice) {
+        return;
+      }
       this.$navigateTo(QuestionsPage, {
         clearHistory: true,
         props: {
           currentQuestionIndex: 0,
           totalQuestions: 3,
           selectedCategory: this.selectedCategory || "technical",
+          timeLimit: this.selectedTime || "60 sec",
         },
         transition: {
           name: "slideLeft",
@@ -195,5 +226,9 @@ export default defineComponent({
   font-size: 24;
   font-weight: 600;
   font-family: "Poppins";
+}
+
+.startButtonDisabled {
+  opacity: 0.55;
 }
 </style>

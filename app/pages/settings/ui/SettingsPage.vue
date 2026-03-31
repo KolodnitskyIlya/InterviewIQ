@@ -22,12 +22,16 @@
 
 <script lang="ts">
 import { defineComponent } from "nativescript-vue";
+import { createActor, type ActorRefFrom } from "xstate";
 
 import type { SettingsLinkItem } from "@/entities/settings";
+import { settingsPreferencesMachine } from "@/features/toggle-setting";
 import { accountLinks, legalLinks } from "@/pages/settings/model/mock";
 import SettingsHeader from "@/widgets/settings-header";
 import SettingsLinks from "@/widgets/settings-links";
 import SettingsPreferences from "@/widgets/settings-preferences";
+
+type SettingsPreferencesActor = ActorRefFrom<typeof settingsPreferencesMachine>;
 
 export default defineComponent({
   name: "SettingsPage",
@@ -42,17 +46,32 @@ export default defineComponent({
       pushNotifications: true,
       legalData: legalLinks as SettingsLinkItem[],
       accountData: accountLinks as SettingsLinkItem[],
+      preferencesActor: null as SettingsPreferencesActor | null,
+      preferencesSubscription: null as { unsubscribe: () => void } | null,
     };
+  },
+  mounted() {
+    const actor = createActor(settingsPreferencesMachine);
+    this.preferencesActor = actor;
+    this.preferencesSubscription = actor.subscribe((snapshot) => {
+      this.darkMode = snapshot.context.darkMode;
+      this.pushNotifications = snapshot.context.pushNotifications;
+    });
+    actor.start();
+  },
+  beforeUnmount() {
+    this.preferencesSubscription?.unsubscribe();
+    this.preferencesActor?.stop();
   },
   methods: {
     goBack() {
       this.$navigateBack();
     },
     updateDarkMode(value: boolean) {
-      this.darkMode = value;
+      this.preferencesActor?.send({ type: "SET_DARK_MODE", value });
     },
     updatePushNotifications(value: boolean) {
-      this.pushNotifications = value;
+      this.preferencesActor?.send({ type: "SET_PUSH_NOTIFICATIONS", value });
     },
   },
 });

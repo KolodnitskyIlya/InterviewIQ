@@ -69,6 +69,9 @@
 
 <script lang="ts">
 import { defineComponent } from "nativescript-vue";
+import { createActor, type ActorRefFrom } from "xstate";
+
+import { questionSessionMachine } from "@/features/submit-answer";
 import PracticePage from "@/pages/practice";
 import ResultsPage from "@/pages/results";
 
@@ -93,6 +96,24 @@ const QUESTIONS = [
   },
 ];
 
+type QuestionSessionActor = ActorRefFrom<typeof questionSessionMachine>;
+
+function parseTimeLimitToSeconds(timeLimit: string): number {
+  const match = timeLimit.match(/\d+/);
+  if (!match) {
+    return 60;
+  }
+  const parsed = Number.parseInt(match[0], 10);
+  return Number.isFinite(parsed) && parsed > 0 ? parsed : 60;
+}
+
+function formatSeconds(totalSeconds: number): string {
+  const safe = Math.max(0, totalSeconds);
+  const minutes = Math.floor(safe / 60);
+  const seconds = safe % 60;
+  return `${minutes}:${seconds.toString().padStart(2, "0")}`;
+}
+
 export default defineComponent({
   name: "QuestionsPage",
   props: {
@@ -108,12 +129,50 @@ export default defineComponent({
       type: String,
       default: "Technical",
     },
+    timeLimit: {
+      type: String,
+      default: "60 sec",
+    },
   },
   data() {
     return {
       isRecording: false,
-      timerText: "0:32",
+      remainingSeconds: parseTimeLimitToSeconds(this.timeLimit),
+      sessionActor: null as QuestionSessionActor | null,
+      sessionSubscription: null as { unsubscribe: () => void } | null,
+      timerInterval: null as ReturnType<typeof setInterval> | null,
+      hasNavigatedToResults: false,
     };
+  },
+  mounted() {
+    const actor = createActor(questionSessionMachine, {
+      input: {
+        totalSeconds: parseTimeLimitToSeconds(this.timeLimit),
+      },
+    });
+
+    this.sessionActor = actor;
+    this.sessionSubscription = actor.subscribe((snapshot) => {
+      this.isRecording = snapshot.context.isRecording;
+      this.remainingSeconds = snapshot.context.remainingSeconds;
+
+      if (snapshot.matches("recording")) {
+        this.startTicking();
+      } else {
+        this.stopTicking();
+      }
+
+      if (snapshot.matches("timeout")) {
+        this.goToResults();
+      }
+    });
+
+    actor.start();
+  },
+  beforeUnmount() {
+    this.stopTicking();
+    this.sessionSubscription?.unsubscribe();
+    this.sessionActor?.stop();
   },
   computed: {
     question(): { category: string; title: string; description: string } {
@@ -126,8 +185,26 @@ export default defineComponent({
       const maxWidth = 132;
       return maxWidth * ((this.currentQuestionIndex + 1) / this.totalQuestions);
     },
+    timerText(): string {
+      return formatSeconds(this.remainingSeconds);
+    },
   },
   methods: {
+    startTicking() {
+      if (this.timerInterval) {
+        return;
+      }
+      this.timerInterval = setInterval(() => {
+        this.sessionActor?.send({ type: "TICK" });
+      }, 1000);
+    },
+    stopTicking() {
+      if (!this.timerInterval) {
+        return;
+      }
+      clearInterval(this.timerInterval);
+      this.timerInterval = null;
+    },
     closePage() {
       this.$navigateTo(PracticePage, {
         clearHistory: true,
@@ -139,15 +216,25 @@ export default defineComponent({
       });
     },
     startRecording() {
-      this.isRecording = true;
+      this.sessionActor?.send({ type: "START_RECORDING" });
     },
     stopRecording() {
+      this.sessionActor?.send({ type: "STOP_RECORDING" });
+      this.goToResults();
+    },
+    goToResults() {
+      if (this.hasNavigatedToResults) {
+        return;
+      }
+      this.hasNavigatedToResults = true;
+      this.stopTicking();
       this.$navigateTo(ResultsPage, {
         clearHistory: true,
         props: {
           currentQuestionIndex: this.currentQuestionIndex,
           totalQuestions: this.totalQuestions,
           score: 82,
+          timeLimit: this.timeLimit,
         },
         transition: {
           name: "slideLeft",

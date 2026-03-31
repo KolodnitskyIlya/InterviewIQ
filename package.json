@@ -6,7 +6,8 @@
   "dependencies": {
     "@nativescript/core": "~9.0.0",
     "nativescript-drop-down": "^6.0.2",
-    "nativescript-vue": "^3.0.0"
+    "nativescript-vue": "^3.0.0",
+    "xstate": "^5.30.0"
   },
   "devDependencies": {
     "@nativescript/android": "9.0.2",
