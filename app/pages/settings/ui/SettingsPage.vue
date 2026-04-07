@@ -25,8 +25,8 @@ import { defineComponent } from "nativescript-vue";
 import { createActor, type ActorRefFrom } from "xstate";
 
 import type { SettingsLinkItem } from "@/entities/settings";
+import { accountLinks, legalLinks } from "@/entities/settings";
 import { settingsPreferencesMachine } from "@/features/toggle-setting";
-import { accountLinks, legalLinks } from "@/pages/settings/model/mock";
 import SettingsHeader from "@/widgets/settings-header";
 import SettingsLinks from "@/widgets/settings-links";
 import SettingsPreferences from "@/widgets/settings-preferences";

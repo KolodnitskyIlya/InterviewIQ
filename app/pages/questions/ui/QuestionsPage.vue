@@ -71,30 +71,11 @@
 import { defineComponent } from "nativescript-vue";
 import { createActor, type ActorRefFrom } from "xstate";
 
+import type { InterviewQuestion } from "@/entities/question";
+import { mockQuestions } from "@/entities/question";
 import { questionSessionMachine } from "@/features/submit-answer";
 import PracticePage from "@/pages/practice";
 import ResultsPage from "@/pages/results";
-
-const QUESTIONS = [
-  {
-    category: "Technical",
-    title: "Explain the difference between REST and GraphQL APIs",
-    description:
-      "Provide a comprehensive answer discussing the key differences, use cases, and trade-offs.",
-  },
-  {
-    category: "Behavioral",
-    title: "Tell me about a time you had a conflict in your team",
-    description:
-      "Describe the situation, your actions, and what changed after your intervention.",
-  },
-  {
-    category: "System Design",
-    title: "How would you design a notification service for a mobile app?",
-    description:
-      "Focus on architecture, scaling, delivery guarantees, and monitoring.",
-  },
-];
 
 type QuestionSessionActor = ActorRefFrom<typeof questionSessionMachine>;
 
@@ -175,8 +156,8 @@ export default defineComponent({
     this.sessionActor?.stop();
   },
   computed: {
-    question(): { category: string; title: string; description: string } {
-      return QUESTIONS[this.currentQuestionIndex % QUESTIONS.length];
+    question(): InterviewQuestion {
+      return mockQuestions[this.currentQuestionIndex % mockQuestions.length];
     },
     progressLabel(): string {
       return `Question ${this.currentQuestionIndex + 1} of ${this.totalQuestions}`;

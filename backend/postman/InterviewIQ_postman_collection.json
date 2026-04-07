@@ -1,0 +1,357 @@
+{
+  "info": {
+    "name": "InterviewIQ MVP API",
+    "description": "MVP API collection for InterviewIQ backend",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    { "key": "baseUrl", "value": "http://127.0.0.1:8000/api/v1" },
+    { "key": "accessToken", "value": "" },
+    { "key": "sessionId", "value": "" },
+    { "key": "answerId", "value": "" }
+  ],
+  "item": [
+    {
+      "name": "Health",
+      "item": [
+        {
+          "name": "GET /health",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/health"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Auth",
+      "item": [
+        {
+          "name": "POST /auth/sign-up",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const data = pm.response.json();",
+                  "if (data?.tokens?.access_token) {",
+                  "  pm.collectionVariables.set('accessToken', data.tokens.access_token);",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"full_name\": \"Danil Kolbasenko\",\n  \"email\": \"danil@example.com\",\n  \"password\": \"password123\"\n}"
+            },
+            "url": "{{baseUrl}}/auth/sign-up"
+          }
+        },
+        {
+          "name": "POST /auth/sign-in",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const data = pm.response.json();",
+                  "if (data?.tokens?.access_token) {",
+                  "  pm.collectionVariables.set('accessToken', data.tokens.access_token);",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"danil@example.com\",\n  \"password\": \"password123\"\n}"
+            },
+            "url": "{{baseUrl}}/auth/sign-in"
+          }
+        },
+        {
+          "name": "GET /auth/me",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{accessToken}}" }
+            ],
+            "url": "{{baseUrl}}/auth/me"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Onboarding + Profile",
+      "item": [
+        {
+          "name": "GET /onboarding/options",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/onboarding/options"
+          }
+        },
+        {
+          "name": "PUT /users/me/onboarding",
+          "request": {
+            "method": "PUT",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{accessToken}}" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"role\": \"ML Engineer\",\n  \"experience_level\": \"middle\"\n}"
+            },
+            "url": "{{baseUrl}}/users/me/onboarding"
+          }
+        },
+        {
+          "name": "GET /users/me/profile",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{accessToken}}" }
+            ],
+            "url": "{{baseUrl}}/users/me/profile"
+          }
+        },
+        {
+          "name": "PUT /users/me/profile",
+          "request": {
+            "method": "PUT",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{accessToken}}" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"full_name\": \"Danil K.\",\n  \"target_role\": \"ML Engineer\",\n  \"experience_level\": \"senior\"\n}"
+            },
+            "url": "{{baseUrl}}/users/me/profile"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Practice",
+      "item": [
+        {
+          "name": "GET /practice/config",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/practice/config"
+          }
+        },
+        {
+          "name": "POST /practice/sessions",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const data = pm.response.json();",
+                  "if (data?.id) {",
+                  "  pm.collectionVariables.set('sessionId', data.id);",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{accessToken}}" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"category\": \"technical\",\n  \"difficulty\": \"easy\",\n  \"time_limit_sec\": 60,\n  \"question_count\": 3\n}"
+            },
+            "url": "{{baseUrl}}/practice/sessions"
+          }
+        },
+        {
+          "name": "GET /practice/sessions/{session_id}",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{accessToken}}" }
+            ],
+            "url": "{{baseUrl}}/practice/sessions/{{sessionId}}"
+          }
+        },
+        {
+          "name": "POST /practice/sessions/{session_id}/start",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{accessToken}}" }
+            ],
+            "url": "{{baseUrl}}/practice/sessions/{{sessionId}}/start"
+          }
+        },
+        {
+          "name": "GET /practice/sessions/{session_id}/questions/current",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{accessToken}}" }
+            ],
+            "url": "{{baseUrl}}/practice/sessions/{{sessionId}}/questions/current"
+          }
+        },
+        {
+          "name": "POST /practice/sessions/{session_id}/questions/next",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{accessToken}}" }
+            ],
+            "url": "{{baseUrl}}/practice/sessions/{{sessionId}}/questions/next"
+          }
+        },
+        {
+          "name": "POST /practice/sessions/{session_id}/answers",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const data = pm.response.json();",
+                  "if (data?.answer_id) {",
+                  "  pm.collectionVariables.set('answerId', data.answer_id);",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{accessToken}}" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"question_id\": \"q_1\",\n  \"answer_text\": \"REST is endpoint based, GraphQL is schema based and more flexible.\"\n}"
+            },
+            "url": "{{baseUrl}}/practice/sessions/{{sessionId}}/answers"
+          }
+        },
+        {
+          "name": "GET /practice/sessions/{session_id}/answers/{answer_id}/analysis",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{accessToken}}" }
+            ],
+            "url": "{{baseUrl}}/practice/sessions/{{sessionId}}/answers/{{answerId}}/analysis"
+          }
+        },
+        {
+          "name": "POST /practice/sessions/{session_id}/finish",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{accessToken}}" }
+            ],
+            "url": "{{baseUrl}}/practice/sessions/{{sessionId}}/finish"
+          }
+        },
+        {
+          "name": "GET /practice/sessions/{session_id}/results",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{accessToken}}" }
+            ],
+            "url": "{{baseUrl}}/practice/sessions/{{sessionId}}/results"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Questions",
+      "item": [
+        {
+          "name": "GET /questions",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/questions?category=technical&difficulty=easy&limit=5"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Analytics + Dashboard",
+      "item": [
+        {
+          "name": "GET /analytics/overview",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{accessToken}}" }
+            ],
+            "url": "{{baseUrl}}/analytics/overview"
+          }
+        },
+        {
+          "name": "GET /analytics/skills",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{accessToken}}" }
+            ],
+            "url": "{{baseUrl}}/analytics/skills"
+          }
+        },
+        {
+          "name": "GET /analytics/weekly-progress",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{accessToken}}" }
+            ],
+            "url": "{{baseUrl}}/analytics/weekly-progress"
+          }
+        },
+        {
+          "name": "GET /analytics/sessions",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{accessToken}}" }
+            ],
+            "url": "{{baseUrl}}/analytics/sessions?page=1&page_size=20"
+          }
+        },
+        {
+          "name": "GET /dashboard/home",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{accessToken}}" }
+            ],
+            "url": "{{baseUrl}}/dashboard/home"
+          }
+        }
+      ]
+    }
+  ]
+}

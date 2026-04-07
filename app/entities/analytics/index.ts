@@ -6,3 +6,9 @@ export type {
   SkillMetric,
   WeeklyProgressPoint,
 } from "./model/types";
+export {
+  readinessSummary,
+  recentSessions,
+  skillsBreakdown,
+  weeklyProgress,
+} from "./model/mock";
