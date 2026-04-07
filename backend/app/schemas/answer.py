@@ -1,6 +1,5 @@
 from pydantic import BaseModel
 
-
 class SubmitAnswerRequest(BaseModel):
     question_id: str
     answer_text: str | None = None
@@ -13,7 +12,6 @@ class SubmitAnswerResponse(BaseModel):
     session_id: str
     question_id: str
     status: str
-
 
 class AnswerAnalysisResponse(BaseModel):
     answer_id: str

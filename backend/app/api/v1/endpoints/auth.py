@@ -1,11 +1,8 @@
 from fastapi import APIRouter, HTTPException, status
-
 from app.schemas.auth import AuthResponse, SignInRequest, SignUpRequest
 from app.services.store import store
 
-
 router = APIRouter(prefix="/auth", tags=["auth"])
-
 
 def _public_user(user: dict) -> dict:
     return {
@@ -14,7 +11,6 @@ def _public_user(user: dict) -> dict:
         "email": user["email"],
         "created_at": user["created_at"],
     }
-
 
 @router.post("/sign-up", response_model=AuthResponse, status_code=status.HTTP_201_CREATED)
 def sign_up(payload: SignUpRequest) -> dict:
@@ -32,7 +28,6 @@ def sign_up(payload: SignUpRequest) -> dict:
         "user": _public_user(user),
         "tokens": tokens,
     }
-
 
 @router.post("/sign-in", response_model=AuthResponse)
 def sign_in(payload: SignInRequest) -> dict:

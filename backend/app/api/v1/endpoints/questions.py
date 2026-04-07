@@ -1,11 +1,8 @@
 from fastapi import APIRouter, Query
-
 from app.schemas.question import QuestionsResponse
 from app.services.store import store
 
-
 router = APIRouter(tags=["questions"])
-
 
 @router.get("/questions", response_model=QuestionsResponse)
 def list_questions(

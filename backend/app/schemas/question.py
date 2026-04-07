@@ -1,6 +1,5 @@
 from pydantic import BaseModel
 
-
 class QuestionItem(BaseModel):
     id: str
     category: str
@@ -8,10 +7,8 @@ class QuestionItem(BaseModel):
     title: str
     description: str
 
-
 class QuestionsResponse(BaseModel):
     items: list[QuestionItem]
-
 
 class SessionQuestionResponse(BaseModel):
     session_id: str

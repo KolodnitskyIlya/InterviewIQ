@@ -1,15 +1,10 @@
-from __future__ import annotations
-
 from datetime import datetime, timezone
 from typing import Any
 from uuid import uuid4
-
 from app.core.security import generate_token
-
 
 def now_iso() -> str:
     return datetime.now(timezone.utc).isoformat()
-
 
 class InMemoryStore:
     def __init__(self) -> None:
@@ -423,6 +418,5 @@ class InMemoryStore:
             "recent_sessions": history[:3],
             "resume_session": resume,
         }
-
 
 store = InMemoryStore()

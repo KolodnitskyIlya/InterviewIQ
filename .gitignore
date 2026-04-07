@@ -29,3 +29,6 @@ typings/
 
 # Backend
 __pycache__
+.venv
+*.md
+!README.md
