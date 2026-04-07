@@ -24,10 +24,10 @@
 import { defineComponent } from "nativescript-vue";
 
 import type { JobInfoItem, ProfileStat, UserProfile } from "@/entities/user";
+import { jobInfo, profile, stats } from "@/entities/user";
 import AnalyticsPage from "@/pages/analytics";
 import HomePage from "@/pages/home";
 import PracticePage from "@/pages/practice";
-import { jobInfo, profile, stats } from "@/pages/profile/model/mock";
 import SettingsPage from "@/pages/settings";
 import SignInPage from "@/pages/sign-in";
 import BottomNavigation from "@/widgets/bottom-navigation";

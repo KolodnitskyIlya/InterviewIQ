@@ -1,4 +1,4 @@
-import type { SettingsLinkItem } from "@/entities/settings";
+import type { SettingsLinkItem } from "./types";
 
 export const legalLinks: SettingsLinkItem[] = [
   { id: "privacy", icon: "🛡", label: "Privacy Policy" },

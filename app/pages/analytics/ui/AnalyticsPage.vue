@@ -34,15 +34,15 @@ import type {
   SkillMetric,
   WeeklyProgressPoint,
 } from "@/entities/analytics";
-import HomePage from "@/pages/home";
-import PracticePage from "@/pages/practice";
-import ProfilePage from "@/pages/profile";
 import {
   readinessSummary,
   recentSessions,
   skillsBreakdown,
   weeklyProgress,
-} from "@/pages/analytics/model/mock";
+} from "@/entities/analytics";
+import HomePage from "@/pages/home";
+import PracticePage from "@/pages/practice";
+import ProfilePage from "@/pages/profile";
 import BottomNavigation from "@/widgets/bottom-navigation";
 import RecentSessions from "@/widgets/recent-sessions";
 import ScoreSummary from "@/widgets/score-summary";

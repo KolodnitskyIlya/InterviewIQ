@@ -1,4 +1,4 @@
-import type { JobInfoItem, ProfileStat, UserProfile } from "@/entities/user";
+import type { JobInfoItem, ProfileStat, UserProfile } from "./types";
 
 export const profile: UserProfile = {
   firstName: "Danil",

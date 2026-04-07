@@ -3,7 +3,7 @@ import type {
   ReadinessSummary,
   SkillMetric,
   WeeklyProgressPoint,
-} from "@/entities/analytics";
+} from "./types";
 
 export const readinessSummary: ReadinessSummary = {
   label: "Overall Readiness",
@@ -32,13 +32,13 @@ export const recentSessions: DetailedSession[] = [
   {
     title: "Technical Round",
     date: "Feb 25, 2026",
-    meta: "10 questions • 25 min",
+    meta: "10 questions | 25 min",
     score: 82,
   },
   {
     title: "Behavioral Questions",
     date: "Feb 20, 2026",
-    meta: "8 questions • 20 min",
+    meta: "8 questions | 20 min",
     score: 78,
   },
 ];

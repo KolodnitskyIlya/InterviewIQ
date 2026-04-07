@@ -92,6 +92,8 @@
 import { defineComponent } from "nativescript-vue";
 import { createActor, type ActorRefFrom } from "xstate";
 
+import type { BreakdownScore } from "@/entities/session";
+import { defaultBreakdownScores } from "@/entities/session";
 import { resultsFlowMachine } from "@/features/finish-session";
 import AnalyticsPage from "@/pages/analytics";
 import QuestionsPage from "@/pages/questions";
@@ -125,13 +127,7 @@ export default defineComponent({
       flowQuestionIndex: this.currentQuestionIndex,
       isLastQuestion: this.currentQuestionIndex >= this.totalQuestions - 1,
       showBreakdown: this.currentQuestionIndex === 0,
-      breakdownScores: [
-        { label: "Confidence", value: 84 },
-        { label: "Clarity", value: 78 },
-        { label: "Technical", value: 72 },
-        { label: "Structure", value: 68 },
-        { label: "Examples", value: 76 },
-      ],
+      breakdownScores: [...defaultBreakdownScores] as BreakdownScore[],
     };
   },
   mounted() {
