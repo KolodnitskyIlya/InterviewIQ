@@ -1,74 +1,56 @@
-## Предполагаемая структура папок
+# InterviewIQ
 
-Featured-sliced Design:
+Мобильное приложение для подготовки к собеседованиям.
 
-```text
-app/
-  app.ts
-  app.css
+## О проекте
 
-  app/
-    navigation/
-    providers/
+`InterviewIQ` помогает пользователю тренировать ответы на интервью-вопросы:
 
-  pages/
-    welcome/
-    how-it-works/
-    personalize/
-    sign-up/
-    sign-in/
-    home/
-    practice/
-    testing/
-    testing-analytics/
-    analytics/
-    profile/
-    settings/
+- выбрать категорию, сложность и лимит времени;
+- пройти практическую сессию с вопросами;
+- получить оценку ответа и рекомендации;
+- отслеживать прогресс в аналитике.
 
-  widgets/
-    bottom-navigation/
-    progress-card/
-    improvement-list/
-    recent-sessions/
-    category-picker/
-    difficulty-picker/
-    timer-picker/
-    question-card/
-    score-summary/
-    skills-chart/
+Проект разрабатывается на стеке:
 
-  features/
-    onboarding-complete/
-    choose-skill-level/
-    sign-up-by-email/
-    sign-in-by-email/
-    start-practice/
-    submit-answer/
-    finish-session/
-    open-settings/
+- `NativeScript + Vue + TypeScript` (mobile frontend);
+- `FastAPI + Python` (backend API).
 
-  entities/
-    user/
-    practice/
-    question/
-    session/
-    analytics/
-    settings/
+## Текущий этап разработки
 
-  shared/
-    ui/
-    api/
-    lib/
-    constants/
-    types/
+Сейчас завершён основной этап вёрстки и архитектурной подготовки.
+
+Что уже сделано:
+
+- реализованы ключевые экраны приложения;
+- настроена базовая навигация и flow практики;
+- внедрена структура проекта в стиле `Feature-Sliced Design`;
+- добавлен backend-каркас `FastAPI` с эндпоинтами и мок-данными;
+- подготовлены материалы для тестирования API:
+  - `backend/postman/InterviewIQ_postman_collection.json`
+
+Что планируется дальше:
+
+- подключение реальной БД и полноценной бизнес-логики;
+- интеграция ML/LLM анализа ответов;
+- связка мобильного клиента с реальными API-данными.
+
+## Запуск frontend
+
+```bash
+ns run android
 ```
 
-## Правила папок FSD
+## Запуск backend
 
-- `pages` содержит целые экраны приложения.
-- `widgets` содержит крупные переиспользуемые блоки экранов. Опциональный слой, который связывает сущности и фичи. Он помогает собрать готовый смысловой блок из разных элементов.
-- `features` слой для элементов кода, которые определяют, как пользователь взаимодействует с бизнес-логикой. Содержит пользовательские действия и сценарии. Это различные кнопки, выпадающие меню, селекты и всё остальное, что несёт бизнесовую логику и с чем можно взаимодействовать.
-- `entities` слой для конкретных бизнес-сущностей. Например, для приложения социальной сети это будут:
-  пользователь, пост, комментарий.
-- `shared` слой для абстрактного, переиспользуемого кода. Содержит переиспользуемый UI, api clients, constants, helpers и types. Это могут быть иконки, отображение кнопок, вспомогательные функции и утилиты, которые неоднократно применяются в разных местах приложения.
-- `app/app` самый верхний, инициализирующий слой. Он содержит корневой компонент, глобальные типы, стили, стейт и оборачивает приложение в провайдеры и контексты - то, что присуще проекту в общем.
+```bash
+cd backend
+python -m venv .venv
+.venv\Scripts\activate
+pip install -r requirements.txt
+uvicorn app.main:app --reload
+```
+
+Swagger:
+
+- `http://127.0.0.1:8000/docs`
