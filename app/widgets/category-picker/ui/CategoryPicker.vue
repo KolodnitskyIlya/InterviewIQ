@@ -34,7 +34,7 @@ const categoryOptions: CategoryOption[] = [
   { id: "hr", icon: "💼", title: "HR Questions" },
   { id: "technical", icon: "💻", title: "Technical" },
   { id: "behavioral", icon: "🗣", title: "Behavioral" },
-  { id: "system", icon: "🗂", title: "System Design" },
+  { id: "system-design", icon: "🗂", title: "System Design" },
 ];
 
 export default defineComponent({
@@ -105,3 +105,4 @@ export default defineComponent({
   font-family: "Poppins";
 }
 </style>
+

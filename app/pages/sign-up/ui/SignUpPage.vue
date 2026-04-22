@@ -45,7 +45,13 @@
         />
       </StackLayout>
 
-      <Button row="3" text="Create Account" class="primaryButton" @tap="signUp" />
+      <Button
+        row="3"
+        :text="isSubmitting ? 'Creating Account...' : 'Create Account'"
+        class="primaryButton"
+        :isEnabled="!isSubmitting"
+        @tap="signUp"
+      />
 
       <Label row="4" class="termsText" textWrap="true">
         <FormattedString>
@@ -70,8 +76,22 @@
 </template>
 
 <script lang="ts">
+import { alert } from "@nativescript/core";
 import { defineComponent } from "nativescript-vue";
-import HomePage from "@/pages/home";
+import { ApiError, interviewIqApi, saveAuthSession } from "@/shared";
+import PersonalizeExperiencePage from "@/pages/personalize-experience";
+
+function errorMessage(error: unknown): string {
+  if (error instanceof ApiError) {
+    return error.message;
+  }
+
+  if (error instanceof Error && error.message) {
+    return error.message;
+  }
+
+  return "Something went wrong. Please try again.";
+}
 
 export default defineComponent({
   name: "SignUpPage",
@@ -81,13 +101,60 @@ export default defineComponent({
       email: "",
       password: "",
       confirmPassword: "",
+      isSubmitting: false,
     };
   },
   methods: {
-    signUp() {
-      this.$navigateTo(HomePage, {
-        clearHistory: true,
-      });
+    async signUp() {
+      if (this.isSubmitting) {
+        return;
+      }
+
+      const fullName = this.fullName.trim();
+      const email = this.email.trim().toLowerCase();
+      const password = this.password.trim();
+      const confirmPassword = this.confirmPassword.trim();
+
+      if (fullName.length < 2 || !email || !password) {
+        await alert({
+          title: "Validation error",
+          message: "Please fill in full name, email, and password.",
+          okButtonText: "OK",
+        });
+        return;
+      }
+
+      if (password !== confirmPassword) {
+        await alert({
+          title: "Validation error",
+          message: "Password and confirmation do not match.",
+          okButtonText: "OK",
+        });
+        return;
+      }
+
+      this.isSubmitting = true;
+
+      try {
+        const auth = await interviewIqApi.signUp({
+          full_name: fullName,
+          email,
+          password,
+        });
+        saveAuthSession(auth);
+
+        this.$navigateTo(PersonalizeExperiencePage, {
+          clearHistory: true,
+        });
+      } catch (error) {
+        await alert({
+          title: "Sign Up failed",
+          message: errorMessage(error),
+          okButtonText: "OK",
+        });
+      } finally {
+        this.isSubmitting = false;
+      }
     },
     goToSignIn() {
       this.$navigateBack();
