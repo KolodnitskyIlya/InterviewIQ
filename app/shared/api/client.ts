@@ -21,7 +21,10 @@ export class ApiError extends Error {
 }
 
 export function getApiBaseUrl(): string {
-  return ApplicationSettings.getString(API_BASE_URL_SETTING_KEY, DEFAULT_API_BASE_URL);
+  return ApplicationSettings.getString(
+    API_BASE_URL_SETTING_KEY,
+    DEFAULT_API_BASE_URL,
+  );
 }
 
 export interface RequestOptions {
@@ -105,7 +108,11 @@ export async function request<T>(
         ? formatValidationDetail((payload as { detail?: unknown }).detail)
         : null;
 
-    throw new ApiError(detail ?? `Request failed with status ${response.status}`, response.status, payload);
+    throw new ApiError(
+      detail ?? `Request failed with status ${response.status}`,
+      response.status,
+      payload,
+    );
   }
 
   return payload as T;
