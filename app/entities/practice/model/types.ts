@@ -1,3 +1,3 @@
-export type PracticeCategory = "hr" | "technical" | "behavioral" | "system";
+export type PracticeCategory = "hr" | "technical" | "behavioral" | "system-design";
 
-export type PracticeDifficulty = "Easy" | "Medium" | "Hard";
+export type PracticeDifficulty = "easy" | "medium" | "hard";

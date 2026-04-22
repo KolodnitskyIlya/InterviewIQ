@@ -66,7 +66,7 @@ export default defineComponent({
   },
   computed: {
     fullName(): string {
-      return `${this.profile.firstName} ${this.profile.lastName}`;
+      return `${this.profile.firstName} ${this.profile.lastName}`.trim();
     },
   },
   methods: {
