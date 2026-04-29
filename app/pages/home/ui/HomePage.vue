@@ -5,7 +5,7 @@
         <StackLayout class="content">
           <StackLayout class="hero">
             <Label text="Good evening," class="greeting" />
-            <Label text="Danil Kolbasenko 👋" class="userName" textWrap="true" />
+            <Label :text="userGreeting" class="userName" textWrap="true" />
             <ProgressCard :value="78" />
           </StackLayout>
 
@@ -54,12 +54,18 @@
 <script lang="ts">
 import { defineComponent } from "nativescript-vue";
 
+import { ApiError, getAccessToken, getAuthSession, interviewIqApi } from "@/shared";
 import AnalyticsPage from "@/pages/analytics";
 import PracticePage from "@/pages/practice";
 import ProfilePage from "@/pages/profile";
+import SignInPage from "@/pages/sign-in";
 import BottomNavigation from "@/widgets/bottom-navigation";
 import ImprovementList from "@/widgets/improvement-list";
 import ProgressCard from "@/widgets/progress-card";
+
+function getFirstName(fullName: string): string {
+  return fullName.trim().split(/\s+/).filter(Boolean)[0] || "User";
+}
 
 export default defineComponent({
   name: "HomePage",
@@ -68,7 +74,37 @@ export default defineComponent({
     ProgressCard,
     ImprovementList,
   },
+  data() {
+    const session = getAuthSession();
+
+    return {
+      userName: session?.user.full_name ? getFirstName(session.user.full_name) : "User",
+    };
+  },
+  computed: {
+    userGreeting(): string {
+      return `${this.userName} 👋`;
+    },
+  },
+  mounted() {
+    void this.loadUserProfile();
+  },
   methods: {
+    async loadUserProfile() {
+      if (!getAccessToken()) {
+        this.$navigateTo(SignInPage, { clearHistory: true });
+        return;
+      }
+
+      try {
+        const profile = await interviewIqApi.getProfile();
+        this.userName = getFirstName(profile.full_name);
+      } catch (error) {
+        if (error instanceof ApiError && error.status === 401) {
+          this.$navigateTo(SignInPage, { clearHistory: true });
+        }
+      }
+    },
     openPractice() {
       this.$navigateTo(PracticePage, {
         clearHistory: true,
