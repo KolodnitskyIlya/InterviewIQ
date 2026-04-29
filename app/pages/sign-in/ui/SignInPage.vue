@@ -87,6 +87,10 @@ function errorMessage(error: unknown): string {
   return "Something went wrong. Please try again.";
 }
 
+function isValidEmail(email: string): boolean {
+  return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+}
+
 export default defineComponent({
   name: "SignInPage",
   data() {
@@ -105,10 +109,19 @@ export default defineComponent({
       const email = this.email.trim().toLowerCase();
       const password = this.password.trim();
 
-      if (!email || !password) {
+      if (!isValidEmail(email)) {
         await alert({
           title: "Validation error",
-          message: "Please enter both email and password.",
+          message: "Please enter a valid email address.",
+          okButtonText: "OK",
+        });
+        return;
+      }
+
+      if (password.length < 6) {
+        await alert({
+          title: "Validation error",
+          message: "Password should contain at least 6 characters.",
           okButtonText: "OK",
         });
         return;

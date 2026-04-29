@@ -93,6 +93,10 @@ function errorMessage(error: unknown): string {
   return "Something went wrong. Please try again.";
 }
 
+function isValidEmail(email: string): boolean {
+  return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+}
+
 export default defineComponent({
   name: "SignUpPage",
   data() {
@@ -115,10 +119,28 @@ export default defineComponent({
       const password = this.password.trim();
       const confirmPassword = this.confirmPassword.trim();
 
-      if (fullName.length < 2 || !email || !password) {
+      if (fullName.length < 2) {
         await alert({
           title: "Validation error",
-          message: "Please fill in full name, email, and password.",
+          message: "Full name should contain at least 2 characters.",
+          okButtonText: "OK",
+        });
+        return;
+      }
+
+      if (!isValidEmail(email)) {
+        await alert({
+          title: "Validation error",
+          message: "Please enter a valid email address.",
+          okButtonText: "OK",
+        });
+        return;
+      }
+
+      if (password.length < 6) {
+        await alert({
+          title: "Validation error",
+          message: "Password should contain at least 6 characters.",
           okButtonText: "OK",
         });
         return;
