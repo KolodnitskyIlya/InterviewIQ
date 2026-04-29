@@ -30,6 +30,38 @@ export interface RequestOptions {
   auth?: boolean;
 }
 
+function formatValidationDetail(detail: unknown): string | null {
+  if (typeof detail === "string") {
+    return detail;
+  }
+
+  if (!Array.isArray(detail)) {
+    return null;
+  }
+
+  const messages = detail
+    .map((item) => {
+      if (typeof item !== "object" || item === null) {
+        return null;
+      }
+
+      const issue = item as { loc?: unknown; msg?: unknown };
+      const field = Array.isArray(issue.loc)
+        ? issue.loc.filter((part) => part !== "body").join(".")
+        : "";
+      const message = typeof issue.msg === "string" ? issue.msg : "";
+
+      if (!message) {
+        return null;
+      }
+
+      return field ? `${field}: ${message}` : message;
+    })
+    .filter((message): message is string => Boolean(message));
+
+  return messages.length > 0 ? messages.join("\n") : null;
+}
+
 export async function request<T>(
   path: string,
   { method = "GET", body, auth = false }: RequestOptions = {},
@@ -69,14 +101,11 @@ export async function request<T>(
     }
 
     const detail =
-      typeof payload === "object" &&
-      payload !== null &&
-      "detail" in payload &&
-      typeof (payload as { detail?: unknown }).detail === "string"
-        ? (payload as { detail: string }).detail
-        : `Request failed with status ${response.status}`;
+      typeof payload === "object" && payload !== null && "detail" in payload
+        ? formatValidationDetail((payload as { detail?: unknown }).detail)
+        : null;
 
-    throw new ApiError(detail, response.status, payload);
+    throw new ApiError(detail ?? `Request failed with status ${response.status}`, response.status, payload);
   }
 
   return payload as T;
