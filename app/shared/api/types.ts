@@ -109,6 +109,19 @@ export interface SubmitAnswerResponse {
   status: string;
 }
 
+export interface AudioUploadRequest {
+  question_id: string;
+  file_name: string;
+  content_type: string;
+  audio_base64: string;
+}
+
+export interface AudioUploadResponse {
+  audio_id: string;
+  audio_url: string;
+  content_type: string;
+}
+
 export interface AnswerAnalysisResponse {
   answer_id: string;
   overall_score: number;
