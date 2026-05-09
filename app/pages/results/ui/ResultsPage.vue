@@ -4,12 +4,12 @@
       <StackLayout row="0" class="hero">
         <Label text="Your score" class="heroLabel" />
         <Label :text="String(score)" class="scoreValue" />
-        <Label text="Great performance!" class="heroSubtitle" />
+        <Label text="Answer analysis" class="heroSubtitle" />
       </StackLayout>
 
       <ScrollView row="1">
         <StackLayout class="content">
-          <StackLayout v-if="showBreakdown" class="card radarCard">
+          <StackLayout class="card radarCard">
             <Label text="Performance Breakdown" class="cardTitle" />
             <StackLayout class="breakdownList">
               <StackLayout
@@ -32,40 +32,25 @@
             </StackLayout>
           </StackLayout>
 
-          <StackLayout v-if="showBreakdown" class="card strengthsCard">
+          <StackLayout class="card strengthsCard">
             <Label text="Strengths" class="cardTitle successTitle" />
             <Label
-              text="• Clear articulation of key concept"
+              v-for="item in strengths"
+              :key="item"
+              :text="'• ' + item"
               class="cardItem successItem"
-            />
-            <Label
-              text="• Good use of real-world examples"
-              class="cardItem successItem"
-            />
-            <Label
-              text="• Structured approach to answering"
-              class="cardItem successItem"
+              textWrap="true"
             />
           </StackLayout>
 
           <StackLayout class="card improveCard">
+            <Label text="Suggestion for improvement" class="cardTitle warningTitle" />
             <Label
-              text="Suggestion for improvement"
-              class="cardTitle warningTitle"
-            />
-            <Label
-              text="• Work on reducing filler words"
+              v-for="item in improvements"
+              :key="item"
+              :text="'• ' + item"
               class="cardItem warningItem"
-            />
-            <Label
-              v-if="!isLastQuestion"
-              text="• Consider providing more specific technical details"
-              class="cardItem warningItem"
-            />
-            <Label
-              v-if="!isLastQuestion"
-              text="• Add comparison of trade-offs between options"
-              class="cardItem warningItem"
+              textWrap="true"
             />
           </StackLayout>
         </StackLayout>
@@ -79,7 +64,7 @@
           @tap="nextQuestion"
         />
         <Button
-          text="Finish Session"
+          :text="isFinishing ? 'Finishing...' : 'Finish Session'"
           class="secondaryButton"
           @tap="finishSession"
         />
@@ -89,6 +74,7 @@
 </template>
 
 <script lang="ts">
+import { alert } from "@nativescript/core";
 import { defineComponent } from "nativescript-vue";
 import { createActor, type ActorRefFrom } from "xstate";
 
@@ -97,8 +83,21 @@ import { defaultBreakdownScores } from "@/entities/session";
 import { resultsFlowMachine } from "@/features/finish-session";
 import AnalyticsPage from "@/pages/analytics";
 import QuestionsPage from "@/pages/questions";
+import SignInPage from "@/pages/sign-in";
+import { ApiError, interviewIqApi, type AnswerAnalysisResponse } from "@/shared";
 
 type ResultsFlowActor = ActorRefFrom<typeof resultsFlowMachine>;
+
+function toPercent(value: number): number {
+  return Math.round(Math.max(0, Math.min(1, value)) * 100);
+}
+
+function toLabel(value: string): string {
+  return value
+    .split("_")
+    .map((part) => part.charAt(0).toUpperCase() + part.slice(1))
+    .join(" ");
+}
 
 export default defineComponent({
   name: "ResultsPage",
@@ -113,21 +112,31 @@ export default defineComponent({
     },
     score: {
       type: Number,
-      default: 82,
+      default: 0,
     },
-    timeLimit: {
+    timeLimitSec: {
+      type: Number,
+      default: 60,
+    },
+    sessionId: {
       type: String,
-      default: "60 sec",
+      required: true,
+    },
+    answerId: {
+      type: String,
+      required: true,
     },
   },
   data() {
     return {
       flowActor: null as ResultsFlowActor | null,
       flowSubscription: null as { unsubscribe: () => void } | null,
-      flowQuestionIndex: this.currentQuestionIndex,
       isLastQuestion: this.currentQuestionIndex >= this.totalQuestions - 1,
-      showBreakdown: this.currentQuestionIndex === 0,
       breakdownScores: [...defaultBreakdownScores] as BreakdownScore[],
+      analysisData: null as AnswerAnalysisResponse | null,
+      strengths: ["Relevant answer direction"] as string[],
+      improvements: ["Add more measurable details"] as string[],
+      isFinishing: false,
     };
   },
   mounted() {
@@ -140,55 +149,104 @@ export default defineComponent({
     this.flowActor = actor;
     this.flowSubscription = actor.subscribe((snapshot) => {
       const index = snapshot.context.currentQuestionIndex;
-      this.flowQuestionIndex = index;
       this.isLastQuestion = index >= snapshot.context.totalQuestions - 1;
-      this.showBreakdown = index === 0;
     });
     actor.start();
+    void this.loadAnalysis();
   },
   beforeUnmount() {
     this.flowSubscription?.unsubscribe();
     this.flowActor?.stop();
   },
   methods: {
+    async loadAnalysis() {
+      try {
+        const analysis = await interviewIqApi.getAnswerAnalysis(this.sessionId, this.answerId);
+        this.analysisData = analysis;
+        this.strengths = analysis.strengths;
+        this.improvements = analysis.to_improve;
+        this.breakdownScores = Object.entries(analysis.scores_by_category).map(
+          ([label, value]) => ({
+            label: toLabel(label),
+            value: toPercent(value),
+          }),
+        );
+      } catch (error) {
+        if (error instanceof ApiError && error.status === 401) {
+          this.$navigateTo(SignInPage, { clearHistory: true });
+        }
+      }
+    },
     breakdownWidth(value: number) {
       return 180 * (Math.max(0, Math.min(100, value)) / 100);
     },
-    nextQuestion() {
+    async nextQuestion() {
       if (!this.flowActor) {
         return;
       }
-      this.flowActor.send({ type: "NEXT_QUESTION" });
-      const snapshot = this.flowActor.getSnapshot();
-      if (snapshot.matches("completed")) {
-        this.finishSession();
+
+      try {
+        const next = await interviewIqApi.nextQuestion(this.sessionId);
+        this.flowActor.send({ type: "NEXT_QUESTION" });
+        this.$navigateTo(QuestionsPage, {
+          clearHistory: true,
+          props: {
+            sessionId: this.sessionId,
+            currentQuestionIndex: next.current_question_index,
+            totalQuestions: next.total_questions,
+            timeLimitSec: this.timeLimitSec,
+          },
+          transition: {
+            name: "slideLeft",
+            duration: 250,
+            curve: "easeInOut",
+          },
+        });
+      } catch (error) {
+        if (error instanceof ApiError && error.status === 401) {
+          this.$navigateTo(SignInPage, { clearHistory: true });
+          return;
+        }
+
+        await alert({
+          title: "Failed to load next question",
+          message: error instanceof ApiError ? error.message : "Please finish the session.",
+          okButtonText: "OK",
+        });
+      }
+    },
+    async finishSession() {
+      if (this.isFinishing) {
         return;
       }
 
-      this.$navigateTo(QuestionsPage, {
-        clearHistory: true,
-        props: {
-          currentQuestionIndex: snapshot.context.currentQuestionIndex,
-          totalQuestions: this.totalQuestions,
-          timeLimit: this.timeLimit,
-        },
-        transition: {
-          name: "slideLeft",
-          duration: 250,
-          curve: "easeInOut",
-        },
-      });
-    },
-    finishSession() {
-      this.flowActor?.send({ type: "FINISH_SESSION" });
-      this.$navigateTo(AnalyticsPage, {
-        clearHistory: true,
-        transition: {
-          name: "fade",
-          duration: 220,
-          curve: "easeInOut",
-        },
-      });
+      this.isFinishing = true;
+      try {
+        this.flowActor?.send({ type: "FINISH_SESSION" });
+        await interviewIqApi.finishPracticeSession(this.sessionId);
+        await interviewIqApi.getSessionResults(this.sessionId);
+        this.$navigateTo(AnalyticsPage, {
+          clearHistory: true,
+          transition: {
+            name: "fade",
+            duration: 220,
+            curve: "easeInOut",
+          },
+        });
+      } catch (error) {
+        if (error instanceof ApiError && error.status === 401) {
+          this.$navigateTo(SignInPage, { clearHistory: true });
+          return;
+        }
+
+        await alert({
+          title: "Failed to finish session",
+          message: error instanceof ApiError ? error.message : "Please try again.",
+          okButtonText: "OK",
+        });
+      } finally {
+        this.isFinishing = false;
+      }
     },
   },
 });
@@ -270,10 +328,6 @@ export default defineComponent({
 
 .breakdownItem {
   margin-bottom: 12;
-}
-
-.breakdownItem:last-child {
-  margin-bottom: 0;
 }
 
 .breakdownHeader {

@@ -49,6 +49,7 @@
 </template>
 
 <script lang="ts">
+import { alert } from "@nativescript/core";
 import { defineComponent } from "nativescript-vue";
 import { createActor, type ActorRefFrom } from "xstate";
 
@@ -61,12 +62,23 @@ import AnalyticsPage from "@/pages/analytics";
 import HomePage from "@/pages/home";
 import ProfilePage from "@/pages/profile";
 import QuestionsPage from "@/pages/questions";
+import SignInPage from "@/pages/sign-in";
+import { ApiError, interviewIqApi } from "@/shared";
 import BottomNavigation from "@/widgets/bottom-navigation";
 import CategoryPicker from "@/widgets/category-picker";
 import DifficultyPicker from "@/widgets/difficulty-picker";
 import TimerPicker from "@/widgets/timer-picker";
 
 type PracticeSetupActor = ActorRefFrom<typeof practiceSetupMachine>;
+
+function parseTimeLimitToSeconds(timeLimit: string): number {
+  const match = timeLimit.match(/\d+/);
+  if (!match) {
+    return 60;
+  }
+  const parsed = Number.parseInt(match[0], 10);
+  return Number.isFinite(parsed) && parsed > 0 ? parsed : 60;
+}
 
 export default defineComponent({
   name: "PracticePage",
@@ -82,6 +94,7 @@ export default defineComponent({
       selectedDifficulty: "" as PracticeSetupContext["selectedDifficulty"],
       selectedTime: "",
       canStartPractice: false,
+      isStarting: false,
       timeOptions: ["30 sec", "45 sec", "60 sec", "90 sec", "120 sec"],
       practiceActor: null as PracticeSetupActor | null,
       practiceSubscription: null as { unsubscribe: () => void } | null,
@@ -142,24 +155,50 @@ export default defineComponent({
     selectTime(option: string) {
       this.practiceActor?.send({ type: "SELECT_TIME", time: option });
     },
-    startPractice() {
-      if (!this.canStartPractice) {
+    async startPractice() {
+      if (!this.canStartPractice || this.isStarting) {
         return;
       }
-      this.$navigateTo(QuestionsPage, {
-        clearHistory: true,
-        props: {
-          currentQuestionIndex: 0,
-          totalQuestions: 3,
-          selectedCategory: this.selectedCategory || "technical",
-          timeLimit: this.selectedTime || "60 sec",
-        },
-        transition: {
-          name: "slideLeft",
-          duration: 280,
-          curve: "easeInOut",
-        },
-      });
+
+      this.isStarting = true;
+      try {
+        const timeLimitSec = parseTimeLimitToSeconds(this.selectedTime || "60 sec");
+        const created = await interviewIqApi.createPracticeSession({
+          category: this.selectedCategory || "technical",
+          difficulty: this.selectedDifficulty || "easy",
+          time_limit_sec: timeLimitSec,
+          question_count: 3,
+        });
+        const started = await interviewIqApi.startPracticeSession(created.id);
+
+        this.$navigateTo(QuestionsPage, {
+          clearHistory: true,
+          props: {
+            sessionId: started.id,
+            currentQuestionIndex: started.current_question_index,
+            totalQuestions: started.question_count,
+            timeLimitSec: started.time_limit_sec,
+          },
+          transition: {
+            name: "slideLeft",
+            duration: 280,
+            curve: "easeInOut",
+          },
+        });
+      } catch (error) {
+        if (error instanceof ApiError && error.status === 401) {
+          this.$navigateTo(SignInPage, { clearHistory: true });
+          return;
+        }
+
+        await alert({
+          title: "Failed to start practice",
+          message: error instanceof ApiError ? error.message : "Please try again.",
+          okButtonText: "OK",
+        });
+      } finally {
+        this.isStarting = false;
+      }
     },
   },
 });

@@ -44,23 +44,26 @@
       </StackLayout>
 
       <StackLayout row="2" class="bottomArea">
-        <Button
-          v-if="!isRecording"
-          text="Start Recording"
-          class="recordButton"
-          @tap="startRecording"
+        <TextView
+          :text="answerText"
+          hint="Type your answer..."
+          class="answerInput"
+          editable="true"
+          @textChange="onAnswerTextChange"
         />
 
-        <StackLayout v-else class="recordingCard">
-          <Label text="Recording..." class="recordingTitle" />
-          <Label text="~ ~ ~ ~ ~" class="waveText" />
-        </StackLayout>
+        <Button
+          :text="recordButtonText"
+          class="voiceButton"
+          @tap="toggleRecording"
+        />
 
         <Button
-          v-if="isRecording"
-          text="Stop answer"
-          class="stopButton"
-          @tap="stopRecording"
+          :text="isSubmitting ? 'Submitting...' : 'Submit answer'"
+          class="recordButton"
+          :isEnabled="canSubmit"
+          :class="canSubmit ? '' : 'submitButtonDisabled'"
+          @tap="submitCurrentAnswer"
         />
       </StackLayout>
     </GridLayout>
@@ -68,25 +71,19 @@
 </template>
 
 <script lang="ts">
+import { alert } from "@nativescript/core";
 import { defineComponent } from "nativescript-vue";
-import { createActor, type ActorRefFrom } from "xstate";
 
-import type { InterviewQuestion } from "@/entities/question";
-import { mockQuestions } from "@/entities/question";
-import { questionSessionMachine } from "@/features/submit-answer";
+import {
+  cancelAudioRecording,
+  startAudioRecording,
+  stopAudioRecording,
+  type RecordedAudio,
+} from "@/features/submit-answer";
 import PracticePage from "@/pages/practice";
 import ResultsPage from "@/pages/results";
-
-type QuestionSessionActor = ActorRefFrom<typeof questionSessionMachine>;
-
-function parseTimeLimitToSeconds(timeLimit: string): number {
-  const match = timeLimit.match(/\d+/);
-  if (!match) {
-    return 60;
-  }
-  const parsed = Number.parseInt(match[0], 10);
-  return Number.isFinite(parsed) && parsed > 0 ? parsed : 60;
-}
+import SignInPage from "@/pages/sign-in";
+import { ApiError, interviewIqApi, type QuestionItemResponse } from "@/shared";
 
 function formatSeconds(totalSeconds: number): string {
   const safe = Math.max(0, totalSeconds);
@@ -114,50 +111,49 @@ export default defineComponent({
       type: String,
       default: "60 sec",
     },
+    timeLimitSec: {
+      type: Number,
+      default: 60,
+    },
+    sessionId: {
+      type: String,
+      required: true,
+    },
   },
   data() {
     return {
+      questionData: null as QuestionItemResponse | null,
+      answerText: "",
+      recordedAudio: null as RecordedAudio | null,
       isRecording: false,
-      remainingSeconds: parseTimeLimitToSeconds(this.timeLimit),
-      sessionActor: null as QuestionSessionActor | null,
-      sessionSubscription: null as { unsubscribe: () => void } | null,
+      isLoading: false,
+      isSubmitting: false,
+      remainingSeconds: this.timeLimitSec,
       timerInterval: null as ReturnType<typeof setInterval> | null,
       hasNavigatedToResults: false,
     };
   },
   mounted() {
-    const actor = createActor(questionSessionMachine, {
-      input: {
-        totalSeconds: parseTimeLimitToSeconds(this.timeLimit),
-      },
-    });
-
-    this.sessionActor = actor;
-    this.sessionSubscription = actor.subscribe((snapshot) => {
-      this.isRecording = snapshot.context.isRecording;
-      this.remainingSeconds = snapshot.context.remainingSeconds;
-
-      if (snapshot.matches("recording")) {
-        this.startTicking();
-      } else {
-        this.stopTicking();
-      }
-
-      if (snapshot.matches("timeout")) {
-        this.goToResults();
-      }
-    });
-
-    actor.start();
+    void this.loadCurrentQuestion();
+    this.startTicking();
   },
   beforeUnmount() {
     this.stopTicking();
-    this.sessionSubscription?.unsubscribe();
-    this.sessionActor?.stop();
+    if (this.isRecording) {
+      cancelAudioRecording();
+    }
   },
   computed: {
-    question(): InterviewQuestion {
-      return mockQuestions[this.currentQuestionIndex % mockQuestions.length];
+    question(): QuestionItemResponse {
+      return (
+        this.questionData ?? {
+          id: "",
+          category: this.selectedCategory,
+          difficulty: "",
+          title: this.isLoading ? "Loading question..." : "Question unavailable",
+          description: this.isLoading ? "Please wait." : "Try going back and starting a new session.",
+        }
+      );
     },
     progressLabel(): string {
       return `Question ${this.currentQuestionIndex + 1} of ${this.totalQuestions}`;
@@ -169,14 +165,46 @@ export default defineComponent({
     timerText(): string {
       return formatSeconds(this.remainingSeconds);
     },
+    canSubmit(): boolean {
+      return Boolean(this.questionData?.id) && !this.isSubmitting;
+    },
+    recordButtonText(): string {
+      if (this.isRecording) {
+        return "Stop voice answer";
+      }
+      return this.recordedAudio ? "Record again" : "Record voice answer";
+    },
   },
   methods: {
+    async loadCurrentQuestion() {
+      this.isLoading = true;
+      try {
+        const response = await interviewIqApi.getCurrentQuestion(this.sessionId);
+        this.questionData = response.question;
+      } catch (error) {
+        if (error instanceof ApiError && error.status === 401) {
+          this.$navigateTo(SignInPage, { clearHistory: true });
+          return;
+        }
+
+        await alert({
+          title: "Failed to load question",
+          message: error instanceof ApiError ? error.message : "Please try again.",
+          okButtonText: "OK",
+        });
+      } finally {
+        this.isLoading = false;
+      }
+    },
     startTicking() {
       if (this.timerInterval) {
         return;
       }
       this.timerInterval = setInterval(() => {
-        this.sessionActor?.send({ type: "TICK" });
+        this.remainingSeconds = Math.max(0, this.remainingSeconds - 1);
+        if (this.remainingSeconds === 0) {
+          void this.submitCurrentAnswer();
+        }
       }, 1000);
     },
     stopTicking() {
@@ -196,14 +224,86 @@ export default defineComponent({
         },
       });
     },
-    startRecording() {
-      this.sessionActor?.send({ type: "START_RECORDING" });
+    onAnswerTextChange(args: { value?: string; object?: { text?: string } }) {
+      this.answerText = args.value ?? args.object?.text ?? "";
     },
-    stopRecording() {
-      this.sessionActor?.send({ type: "STOP_RECORDING" });
-      this.goToResults();
+    async toggleRecording() {
+      if (this.isSubmitting) {
+        return;
+      }
+
+      try {
+        if (!this.isRecording) {
+          startAudioRecording();
+          this.recordedAudio = null;
+          this.isRecording = true;
+          return;
+        }
+
+        this.recordedAudio = stopAudioRecording();
+        this.isRecording = false;
+      } catch (error) {
+        this.isRecording = false;
+        await alert({
+          title: "Voice recording unavailable",
+          message: error instanceof Error ? error.message : "Please use text answer for now.",
+          okButtonText: "OK",
+        });
+      }
     },
-    goToResults() {
+    async submitCurrentAnswer() {
+      if (!this.questionData || this.isSubmitting || this.hasNavigatedToResults) {
+        return;
+      }
+
+      this.isSubmitting = true;
+      this.stopTicking();
+
+      try {
+        let audioUrl: string | null = null;
+        let audioId: string | null = null;
+
+        if (this.isRecording) {
+          this.recordedAudio = stopAudioRecording();
+          this.isRecording = false;
+        }
+
+        if (this.recordedAudio) {
+          const upload = await interviewIqApi.uploadAnswerAudio(this.sessionId, {
+            question_id: this.questionData.id,
+            file_name: this.recordedAudio.fileName,
+            content_type: this.recordedAudio.contentType,
+            audio_base64: this.recordedAudio.audioBase64,
+          });
+          audioUrl = upload.audio_url;
+          audioId = upload.audio_id;
+        }
+
+        const answer = await interviewIqApi.submitAnswer(this.sessionId, {
+          question_id: this.questionData.id,
+          answer_text: this.answerText.trim() || null,
+          audio_url: audioUrl,
+          audio_id: audioId,
+        });
+        const analysis = await interviewIqApi.getAnswerAnalysis(this.sessionId, answer.answer_id);
+        this.goToResults(answer.answer_id, analysis.overall_score);
+      } catch (error) {
+        this.startTicking();
+        if (error instanceof ApiError && error.status === 401) {
+          this.$navigateTo(SignInPage, { clearHistory: true });
+          return;
+        }
+
+        await alert({
+          title: "Failed to submit answer",
+          message: error instanceof ApiError ? error.message : "Please try again.",
+          okButtonText: "OK",
+        });
+      } finally {
+        this.isSubmitting = false;
+      }
+    },
+    goToResults(answerId: string, score: number) {
       if (this.hasNavigatedToResults) {
         return;
       }
@@ -212,10 +312,12 @@ export default defineComponent({
       this.$navigateTo(ResultsPage, {
         clearHistory: true,
         props: {
+          sessionId: this.sessionId,
+          answerId,
           currentQuestionIndex: this.currentQuestionIndex,
           totalQuestions: this.totalQuestions,
-          score: 82,
-          timeLimit: this.timeLimit,
+          score,
+          timeLimitSec: this.timeLimitSec,
         },
         transition: {
           name: "slideLeft",
@@ -351,7 +453,23 @@ export default defineComponent({
   padding-top: 16;
 }
 
+.answerInput {
+  height: 120;
+  border-radius: 20;
+  border-width: 1;
+  border-color: #d1d5db;
+  background-color: #ffffff;
+  padding-top: 14;
+  padding-right: 16;
+  padding-bottom: 14;
+  padding-left: 16;
+  font-size: 16;
+  color: #111827;
+  font-family: "Poppins";
+}
+
 .recordButton {
+  margin-top: 12;
   height: 72;
   border-radius: 26;
   background: linear-gradient(90deg, #4f46e5, #7c3aed);
@@ -359,6 +477,23 @@ export default defineComponent({
   font-size: 20;
   font-weight: 600;
   font-family: "Poppins";
+}
+
+.voiceButton {
+  margin-top: 10;
+  height: 54;
+  border-radius: 20;
+  background-color: #ffffff;
+  border-width: 1;
+  border-color: #c7d2fe;
+  color: #4f46e5;
+  font-size: 17;
+  font-weight: 600;
+  font-family: "Poppins";
+}
+
+.submitButtonDisabled {
+  opacity: 0.55;
 }
 
 .recordingCard {
