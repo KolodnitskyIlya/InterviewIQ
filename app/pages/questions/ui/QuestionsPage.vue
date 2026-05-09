@@ -53,6 +53,12 @@
         />
 
         <Button
+          :text="recordButtonText"
+          class="voiceButton"
+          @tap="toggleRecording"
+        />
+
+        <Button
           :text="isSubmitting ? 'Submitting...' : 'Submit answer'"
           class="recordButton"
           :isEnabled="canSubmit"
@@ -68,6 +74,12 @@
 import { alert } from "@nativescript/core";
 import { defineComponent } from "nativescript-vue";
 
+import {
+  cancelAudioRecording,
+  startAudioRecording,
+  stopAudioRecording,
+  type RecordedAudio,
+} from "@/features/submit-answer";
 import PracticePage from "@/pages/practice";
 import ResultsPage from "@/pages/results";
 import SignInPage from "@/pages/sign-in";
@@ -112,6 +124,8 @@ export default defineComponent({
     return {
       questionData: null as QuestionItemResponse | null,
       answerText: "",
+      recordedAudio: null as RecordedAudio | null,
+      isRecording: false,
       isLoading: false,
       isSubmitting: false,
       remainingSeconds: this.timeLimitSec,
@@ -125,6 +139,9 @@ export default defineComponent({
   },
   beforeUnmount() {
     this.stopTicking();
+    if (this.isRecording) {
+      cancelAudioRecording();
+    }
   },
   computed: {
     question(): QuestionItemResponse {
@@ -150,6 +167,12 @@ export default defineComponent({
     },
     canSubmit(): boolean {
       return Boolean(this.questionData?.id) && !this.isSubmitting;
+    },
+    recordButtonText(): string {
+      if (this.isRecording) {
+        return "Stop voice answer";
+      }
+      return this.recordedAudio ? "Record again" : "Record voice answer";
     },
   },
   methods: {
@@ -204,6 +227,30 @@ export default defineComponent({
     onAnswerTextChange(args: { value?: string; object?: { text?: string } }) {
       this.answerText = args.value ?? args.object?.text ?? "";
     },
+    async toggleRecording() {
+      if (this.isSubmitting) {
+        return;
+      }
+
+      try {
+        if (!this.isRecording) {
+          startAudioRecording();
+          this.recordedAudio = null;
+          this.isRecording = true;
+          return;
+        }
+
+        this.recordedAudio = stopAudioRecording();
+        this.isRecording = false;
+      } catch (error) {
+        this.isRecording = false;
+        await alert({
+          title: "Voice recording unavailable",
+          message: error instanceof Error ? error.message : "Please use text answer for now.",
+          okButtonText: "OK",
+        });
+      }
+    },
     async submitCurrentAnswer() {
       if (!this.questionData || this.isSubmitting || this.hasNavigatedToResults) {
         return;
@@ -213,9 +260,30 @@ export default defineComponent({
       this.stopTicking();
 
       try {
+        let audioUrl: string | null = null;
+        let audioId: string | null = null;
+
+        if (this.isRecording) {
+          this.recordedAudio = stopAudioRecording();
+          this.isRecording = false;
+        }
+
+        if (this.recordedAudio) {
+          const upload = await interviewIqApi.uploadAnswerAudio(this.sessionId, {
+            question_id: this.questionData.id,
+            file_name: this.recordedAudio.fileName,
+            content_type: this.recordedAudio.contentType,
+            audio_base64: this.recordedAudio.audioBase64,
+          });
+          audioUrl = upload.audio_url;
+          audioId = upload.audio_id;
+        }
+
         const answer = await interviewIqApi.submitAnswer(this.sessionId, {
           question_id: this.questionData.id,
           answer_text: this.answerText.trim() || null,
+          audio_url: audioUrl,
+          audio_id: audioId,
         });
         const analysis = await interviewIqApi.getAnswerAnalysis(this.sessionId, answer.answer_id);
         this.goToResults(answer.answer_id, analysis.overall_score);
@@ -407,6 +475,19 @@ export default defineComponent({
   background: linear-gradient(90deg, #4f46e5, #7c3aed);
   color: #ffffff;
   font-size: 20;
+  font-weight: 600;
+  font-family: "Poppins";
+}
+
+.voiceButton {
+  margin-top: 10;
+  height: 54;
+  border-radius: 20;
+  background-color: #ffffff;
+  border-width: 1;
+  border-color: #c7d2fe;
+  color: #4f46e5;
+  font-size: 17;
   font-weight: 600;
   font-family: "Poppins";
 }

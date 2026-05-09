@@ -7,6 +7,8 @@ export type {
   AuthTokens,
   AuthUser,
   AnswerAnalysisResponse,
+  AudioUploadRequest,
+  AudioUploadResponse,
   CreateSessionRequest,
   ExperienceLevel,
   OnboardingOptionsResponse,

@@ -3,6 +3,8 @@ import type {
   AuthMeResponse,
   AuthResponse,
   AnswerAnalysisResponse,
+  AudioUploadRequest,
+  AudioUploadResponse,
   CreateSessionRequest,
   OnboardingOptionsResponse,
   OnboardingStateResponse,
@@ -90,6 +92,13 @@ export const interviewIqApi = {
   },
   submitAnswer(sessionId: string, payload: SubmitAnswerRequest) {
     return request<SubmitAnswerResponse>(`/practice/sessions/${sessionId}/answers`, {
+      method: "POST",
+      auth: true,
+      body: payload,
+    });
+  },
+  uploadAnswerAudio(sessionId: string, payload: AudioUploadRequest) {
+    return request<AudioUploadResponse>(`/practice/sessions/${sessionId}/audio`, {
       method: "POST",
       auth: true,
       body: payload,

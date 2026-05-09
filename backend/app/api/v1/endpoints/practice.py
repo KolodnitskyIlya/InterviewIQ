@@ -2,6 +2,8 @@ from fastapi import APIRouter, Depends, HTTPException, Query
 from app.core.deps import get_current_user
 from app.schemas.answer import (
     AnswerAnalysisResponse,
+    AudioUploadRequest,
+    AudioUploadResponse,
     SubmitAnswerRequest,
     SubmitAnswerResponse,
 )
@@ -12,6 +14,7 @@ from app.schemas.practice import (
     SessionStateResponse,
 )
 from app.schemas.question import SessionQuestionResponse
+from app.services.audio_storage import audio_storage
 from app.services.store import store
 
 router = APIRouter(tags=["practice"])
@@ -134,6 +137,32 @@ def submit_answer(
         "question_id": answer["question_id"],
         "status": answer["status"],
     }
+
+
+@router.post("/practice/sessions/{session_id}/audio", response_model=AudioUploadResponse)
+def upload_answer_audio(
+    session_id: str,
+    payload: AudioUploadRequest,
+    user: dict = Depends(get_current_user),
+) -> dict:
+    session = store.get_session(user_id=user["id"], session_id=session_id)
+    if not session:
+        raise HTTPException(status_code=404, detail="Session not found")
+
+    if payload.question_id not in session["question_ids"]:
+        raise HTTPException(status_code=409, detail="Question does not belong to this session")
+
+    try:
+        return audio_storage.upload_base64_audio(
+            user_id=user["id"],
+            session_id=session_id,
+            question_id=payload.question_id,
+            file_name=payload.file_name,
+            content_type=payload.content_type,
+            audio_base64=payload.audio_base64,
+        )
+    except ValueError as exc:
+        raise HTTPException(status_code=400, detail="Invalid audio payload") from exc
 
 @router.get(
     "/practice/sessions/{session_id}/answers/{answer_id}/analysis",
