@@ -44,13 +44,16 @@ def create_session(
     payload: CreateSessionRequest,
     user: dict = Depends(get_current_user),
 ) -> dict:
-    session = store.create_session(
-        user_id=user["id"],
-        category=payload.category,
-        difficulty=payload.difficulty,
-        time_limit_sec=payload.time_limit_sec,
-        question_count=payload.question_count,
-    )
+    try:
+        session = store.create_session(
+            user_id=user["id"],
+            category=payload.category,
+            difficulty=payload.difficulty,
+            time_limit_sec=payload.time_limit_sec,
+            question_count=payload.question_count,
+        )
+    except ValueError as exc:
+        raise HTTPException(status_code=409, detail=str(exc)) from exc
     return _session_state(session)
 
 @router.get("/practice/sessions/{session_id}", response_model=SessionStateResponse)
