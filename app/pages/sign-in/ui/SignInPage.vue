@@ -35,7 +35,13 @@
         />
       </StackLayout>
 
-      <Button row="3" text="Sign In" class="primaryButton" @tap="signIn" />
+      <Button
+        row="3"
+        :text="isSubmitting ? 'Signing In...' : 'Sign In'"
+        class="primaryButton"
+        :isEnabled="!isSubmitting"
+        @tap="signIn"
+      />
 
       <GridLayout row="4" columns="*, auto, *" class="divider">
         <StackLayout col="0" class="dividerLine" />
@@ -62,9 +68,28 @@
 </template>
 
 <script lang="ts">
+import { alert } from "@nativescript/core";
 import { defineComponent } from "nativescript-vue";
+import { ApiError, interviewIqApi, saveAuthSession } from "@/shared";
 import HomePage from "@/pages/home";
+import PersonalizeExperiencePage from "@/pages/personalize-experience";
 import SignUpPage from "@/pages/sign-up";
+
+function errorMessage(error: unknown): string {
+  if (error instanceof ApiError) {
+    return error.message;
+  }
+
+  if (error instanceof Error && error.message) {
+    return error.message;
+  }
+
+  return "Something went wrong. Please try again.";
+}
+
+function isValidEmail(email: string): boolean {
+  return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+}
 
 export default defineComponent({
   name: "SignInPage",
@@ -72,13 +97,57 @@ export default defineComponent({
     return {
       email: "",
       password: "",
+      isSubmitting: false,
     };
   },
   methods: {
-    signIn() {
-      this.$navigateTo(HomePage, {
-        clearHistory: true,
-      });
+    async signIn() {
+      if (this.isSubmitting) {
+        return;
+      }
+
+      const email = this.email.trim().toLowerCase();
+      const password = this.password.trim();
+
+      if (!isValidEmail(email)) {
+        await alert({
+          title: "Validation error",
+          message: "Please enter a valid email address.",
+          okButtonText: "OK",
+        });
+        return;
+      }
+
+      if (password.length < 6) {
+        await alert({
+          title: "Validation error",
+          message: "Password should contain at least 6 characters.",
+          okButtonText: "OK",
+        });
+        return;
+      }
+
+      this.isSubmitting = true;
+
+      try {
+        const auth = await interviewIqApi.signIn({ email, password });
+        saveAuthSession(auth);
+
+        const me = await interviewIqApi.getAuthMe();
+        const needsOnboarding = !me.target_role || !me.experience_level;
+
+        this.$navigateTo(needsOnboarding ? PersonalizeExperiencePage : HomePage, {
+          clearHistory: true,
+        });
+      } catch (error) {
+        await alert({
+          title: "Sign In failed",
+          message: errorMessage(error),
+          okButtonText: "OK",
+        });
+      } finally {
+        this.isSubmitting = false;
+      }
     },
     goToSignUp() {
       this.$navigateTo(SignUpPage);

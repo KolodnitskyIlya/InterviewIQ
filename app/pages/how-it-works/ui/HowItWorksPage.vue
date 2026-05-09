@@ -64,13 +64,13 @@
 
 <script lang="ts">
 import { defineComponent } from "nativescript-vue";
-import PersonalizeExperiencePage from "@/pages/personalize-experience";
+import SignInPage from "@/pages/sign-in";
 
 export default defineComponent({
   name: "HowItWorksPage",
   methods: {
     goNext() {
-      this.$navigateTo(PersonalizeExperiencePage);
+      this.$navigateTo(SignInPage);
     },
   },
 });

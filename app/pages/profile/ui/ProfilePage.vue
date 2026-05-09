@@ -21,10 +21,11 @@
 </template>
 
 <script lang="ts">
+import { alert } from "@nativescript/core";
 import { defineComponent } from "nativescript-vue";
 
 import type { JobInfoItem, ProfileStat, UserProfile } from "@/entities/user";
-import { jobInfo, profile, stats } from "@/entities/user";
+import { ApiError, clearAuthSession, getAccessToken, interviewIqApi } from "@/shared";
 import AnalyticsPage from "@/pages/analytics";
 import HomePage from "@/pages/home";
 import PracticePage from "@/pages/practice";
@@ -34,6 +35,58 @@ import BottomNavigation from "@/widgets/bottom-navigation";
 import JobInformation from "@/widgets/job-information";
 import ProfileActions from "@/widgets/profile-actions";
 import ProfileSummary from "@/widgets/profile-summary";
+
+const defaultProfile: UserProfile = {
+  firstName: "User",
+  lastName: "",
+  email: "user@example.com",
+  avatarLetter: "U",
+};
+
+const defaultStats: ProfileStat[] = [
+  { value: "-", label: "Questions" },
+  { value: "-", label: "Sessions" },
+  { value: "-", label: "Avg Score" },
+];
+
+const defaultJobInfo: JobInfoItem[] = [
+  { label: "Target Role", value: "-" },
+  { label: "Experience Level", value: "-" },
+];
+
+function experienceLabel(level: string | null): string {
+  if (!level) {
+    return "-";
+  }
+
+  if (level === "junior") {
+    return "Junior";
+  }
+
+  if (level === "middle") {
+    return "Middle";
+  }
+
+  if (level === "senior") {
+    return "Senior";
+  }
+
+  return level;
+}
+
+function toUserProfile(fullName: string, email: string): UserProfile {
+  const parts = fullName.trim().split(/\s+/).filter(Boolean);
+  const firstName = parts[0] || "User";
+  const lastName = parts.slice(1).join(" ");
+  const avatarLetter = firstName[0]?.toUpperCase() || "U";
+
+  return {
+    firstName,
+    lastName,
+    email,
+    avatarLetter,
+  };
+}
 
 export default defineComponent({
   name: "ProfilePage",
@@ -45,12 +98,44 @@ export default defineComponent({
   },
   data() {
     return {
-      profileData: profile as UserProfile,
-      statsData: stats as ProfileStat[],
-      jobInfoData: jobInfo as JobInfoItem[],
+      profileData: defaultProfile as UserProfile,
+      statsData: defaultStats as ProfileStat[],
+      jobInfoData: defaultJobInfo as JobInfoItem[],
     };
   },
+  mounted() {
+    void this.loadProfile();
+  },
   methods: {
+    async loadProfile() {
+      if (!getAccessToken()) {
+        this.$navigateTo(SignInPage, { clearHistory: true });
+        return;
+      }
+
+      try {
+        const profile = await interviewIqApi.getProfile();
+
+        this.profileData = toUserProfile(profile.full_name, profile.email);
+        this.jobInfoData = [
+          { label: "Target Role", value: profile.target_role || "-" },
+          {
+            label: "Experience Level",
+            value: experienceLabel(profile.experience_level),
+          },
+        ];
+      } catch (error) {
+        await alert({
+          title: "Failed to load profile",
+          message: error instanceof ApiError ? error.message : "Please try again.",
+          okButtonText: "OK",
+        });
+
+        if (error instanceof ApiError && error.status === 401) {
+          this.$navigateTo(SignInPage, { clearHistory: true });
+        }
+      }
+    },
     openHome() {
       this.$navigateTo(HomePage, {
         clearHistory: true,
@@ -91,6 +176,7 @@ export default defineComponent({
       });
     },
     logout() {
+      clearAuthSession();
       this.$navigateTo(SignInPage, {
         clearHistory: true,
         transition: {

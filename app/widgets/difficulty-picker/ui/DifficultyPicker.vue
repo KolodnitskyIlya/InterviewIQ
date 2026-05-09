@@ -2,12 +2,12 @@
   <StackLayout>
     <GridLayout
       v-for="level in levels"
-      :key="level"
+      :key="level.id"
       class="difficultyCard"
-      :class="selectedDifficulty === level ? 'selectedCard' : ''"
-      @tap="onSelect(level)"
+      :class="selectedDifficulty === level.id ? 'selectedCard' : ''"
+      @tap="onSelect(level.id)"
     >
-      <Label :text="level" class="difficultyText" />
+      <Label :text="level.label" class="difficultyText" />
     </GridLayout>
   </StackLayout>
 </template>
@@ -17,7 +17,16 @@ import { defineComponent } from "nativescript-vue";
 
 import type { PracticeDifficulty } from "@/entities/practice";
 
-const difficultyLevels: PracticeDifficulty[] = ["Easy", "Medium", "Hard"];
+type DifficultyOption = {
+  id: PracticeDifficulty;
+  label: string;
+};
+
+const difficultyLevels: DifficultyOption[] = [
+  { id: "easy", label: "Easy" },
+  { id: "medium", label: "Medium" },
+  { id: "hard", label: "Hard" },
+];
 
 export default defineComponent({
   name: "DifficultyPicker",
