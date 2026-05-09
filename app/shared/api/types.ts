@@ -59,3 +59,78 @@ export interface UpdateProfileRequest {
   target_role?: string;
   experience_level?: ExperienceLevel;
 }
+
+export interface CreateSessionRequest {
+  category: string;
+  difficulty: string;
+  time_limit_sec: number;
+  question_count: number;
+}
+
+export interface SessionStateResponse {
+  id: string;
+  status: string;
+  category: string;
+  difficulty: string;
+  time_limit_sec: number;
+  question_count: number;
+  current_question_index: number;
+  created_at: string;
+  started_at: string | null;
+  finished_at: string | null;
+}
+
+export interface QuestionItemResponse {
+  id: string;
+  category: string;
+  difficulty: string;
+  title: string;
+  description: string;
+}
+
+export interface SessionQuestionResponse {
+  session_id: string;
+  current_question_index: number;
+  total_questions: number;
+  question: QuestionItemResponse | null;
+}
+
+export interface SubmitAnswerRequest {
+  question_id: string;
+  answer_text?: string | null;
+  audio_url?: string | null;
+  audio_id?: string | null;
+}
+
+export interface SubmitAnswerResponse {
+  answer_id: string;
+  session_id: string;
+  question_id: string;
+  status: string;
+}
+
+export interface AnswerAnalysisResponse {
+  answer_id: string;
+  overall_score: number;
+  scores_by_category: Record<string, number>;
+  strengths: string[];
+  to_improve: string[];
+  quick_tips: string[];
+  ideal_answer_example: string;
+}
+
+export interface SessionResultItem {
+  answer_id: string;
+  question_id: string;
+  question_title: string;
+  score: number;
+}
+
+export interface SessionResultsResponse {
+  session_id: string;
+  status: string;
+  average_score: number;
+  questions_answered: number;
+  question_results: SessionResultItem[];
+  finished_at: string | null;
+}

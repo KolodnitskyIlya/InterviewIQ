@@ -2,9 +2,16 @@ import { request } from "./client";
 import type {
   AuthMeResponse,
   AuthResponse,
+  AnswerAnalysisResponse,
+  CreateSessionRequest,
   OnboardingOptionsResponse,
   OnboardingStateResponse,
   OnboardingUpdateRequest,
+  SessionQuestionResponse,
+  SessionResultsResponse,
+  SessionStateResponse,
+  SubmitAnswerRequest,
+  SubmitAnswerResponse,
   UserProfileResponse,
 } from "./types";
 
@@ -49,6 +56,59 @@ export const interviewIqApi = {
   },
   getProfile() {
     return request<UserProfileResponse>("/users/me/profile", {
+      auth: true,
+    });
+  },
+  createPracticeSession(payload: CreateSessionRequest) {
+    return request<SessionStateResponse>("/practice/sessions", {
+      method: "POST",
+      auth: true,
+      body: payload,
+    });
+  },
+  startPracticeSession(sessionId: string) {
+    return request<SessionStateResponse>(`/practice/sessions/${sessionId}/start`, {
+      method: "POST",
+      auth: true,
+    });
+  },
+  getPracticeSession(sessionId: string) {
+    return request<SessionStateResponse>(`/practice/sessions/${sessionId}`, {
+      auth: true,
+    });
+  },
+  getCurrentQuestion(sessionId: string) {
+    return request<SessionQuestionResponse>(`/practice/sessions/${sessionId}/questions/current`, {
+      auth: true,
+    });
+  },
+  nextQuestion(sessionId: string) {
+    return request<SessionQuestionResponse>(`/practice/sessions/${sessionId}/questions/next`, {
+      method: "POST",
+      auth: true,
+    });
+  },
+  submitAnswer(sessionId: string, payload: SubmitAnswerRequest) {
+    return request<SubmitAnswerResponse>(`/practice/sessions/${sessionId}/answers`, {
+      method: "POST",
+      auth: true,
+      body: payload,
+    });
+  },
+  getAnswerAnalysis(sessionId: string, answerId: string) {
+    return request<AnswerAnalysisResponse>(
+      `/practice/sessions/${sessionId}/answers/${answerId}/analysis`,
+      { auth: true },
+    );
+  },
+  finishPracticeSession(sessionId: string) {
+    return request<SessionStateResponse>(`/practice/sessions/${sessionId}/finish`, {
+      method: "POST",
+      auth: true,
+    });
+  },
+  getSessionResults(sessionId: string) {
+    return request<SessionResultsResponse>(`/practice/sessions/${sessionId}/results`, {
       auth: true,
     });
   },
