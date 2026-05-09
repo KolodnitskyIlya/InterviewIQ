@@ -150,8 +150,12 @@ export default defineComponent({
           id: "",
           category: this.selectedCategory,
           difficulty: "",
-          title: this.isLoading ? "Loading question..." : "Question unavailable",
-          description: this.isLoading ? "Please wait." : "Try going back and starting a new session.",
+          title: this.isLoading
+            ? "Loading question..."
+            : "Question unavailable",
+          description: this.isLoading
+            ? "Please wait."
+            : "Try going back and starting a new session.",
         }
       );
     },
@@ -179,7 +183,9 @@ export default defineComponent({
     async loadCurrentQuestion() {
       this.isLoading = true;
       try {
-        const response = await interviewIqApi.getCurrentQuestion(this.sessionId);
+        const response = await interviewIqApi.getCurrentQuestion(
+          this.sessionId,
+        );
         this.questionData = response.question;
       } catch (error) {
         if (error instanceof ApiError && error.status === 401) {
@@ -189,7 +195,8 @@ export default defineComponent({
 
         await alert({
           title: "Failed to load question",
-          message: error instanceof ApiError ? error.message : "Please try again.",
+          message:
+            error instanceof ApiError ? error.message : "Please try again.",
           okButtonText: "OK",
         });
       } finally {
@@ -246,13 +253,20 @@ export default defineComponent({
         this.isRecording = false;
         await alert({
           title: "Voice recording unavailable",
-          message: error instanceof Error ? error.message : "Please use text answer for now.",
+          message:
+            error instanceof Error
+              ? error.message
+              : "Please use text answer for now.",
           okButtonText: "OK",
         });
       }
     },
     async submitCurrentAnswer() {
-      if (!this.questionData || this.isSubmitting || this.hasNavigatedToResults) {
+      if (
+        !this.questionData ||
+        this.isSubmitting ||
+        this.hasNavigatedToResults
+      ) {
         return;
       }
 
@@ -269,12 +283,15 @@ export default defineComponent({
         }
 
         if (this.recordedAudio) {
-          const upload = await interviewIqApi.uploadAnswerAudio(this.sessionId, {
-            question_id: this.questionData.id,
-            file_name: this.recordedAudio.fileName,
-            content_type: this.recordedAudio.contentType,
-            audio_base64: this.recordedAudio.audioBase64,
-          });
+          const upload = await interviewIqApi.uploadAnswerAudio(
+            this.sessionId,
+            {
+              question_id: this.questionData.id,
+              file_name: this.recordedAudio.fileName,
+              content_type: this.recordedAudio.contentType,
+              audio_base64: this.recordedAudio.audioBase64,
+            },
+          );
           audioUrl = upload.audio_url;
           audioId = upload.audio_id;
         }
@@ -285,7 +302,10 @@ export default defineComponent({
           audio_url: audioUrl,
           audio_id: audioId,
         });
-        const analysis = await interviewIqApi.getAnswerAnalysis(this.sessionId, answer.answer_id);
+        const analysis = await interviewIqApi.getAnswerAnalysis(
+          this.sessionId,
+          answer.answer_id,
+        );
         this.goToResults(answer.answer_id, analysis.overall_score);
       } catch (error) {
         this.startTicking();
@@ -296,7 +316,8 @@ export default defineComponent({
 
         await alert({
           title: "Failed to submit answer",
-          message: error instanceof ApiError ? error.message : "Please try again.",
+          message:
+            error instanceof ApiError ? error.message : "Please try again.",
           okButtonText: "OK",
         });
       } finally {
