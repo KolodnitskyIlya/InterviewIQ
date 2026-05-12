@@ -130,6 +130,11 @@ export interface AnswerAnalysisResponse {
   to_improve: string[];
   quick_tips: string[];
   ideal_answer_example: string;
+  explanation?: string | null;
+  provider?: string | null;
+  rubric_version?: string | null;
+  error_message?: string | null;
+  latency_ms?: number | null;
 }
 
 export interface SessionResultItem {

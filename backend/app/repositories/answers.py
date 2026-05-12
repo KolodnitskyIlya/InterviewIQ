@@ -33,6 +33,16 @@ class AnswerRepository:
         self.db.flush()
         return answer, analysis
 
+    def get_existing_analysis_by_cache_key(self, question_id: str, answer_text: str | None) -> AnswerAnalysis | None:
+        stmt = (
+            select(AnswerAnalysis)
+            .join(Answer, Answer.id == AnswerAnalysis.answer_id)
+            .where(Answer.question_id == question_id, Answer.answer_text == answer_text)
+            .order_by(Answer.created_at.desc())
+            .limit(1)
+        )
+        return self.db.scalars(stmt).first()
+
     def get_analysis(self, answer_id: str) -> AnswerAnalysis | None:
         return self.db.get(AnswerAnalysis, answer_id)
 

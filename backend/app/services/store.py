@@ -1,8 +1,11 @@
 from collections.abc import Iterator
 from contextlib import contextmanager
 from datetime import datetime
+import logging
+
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
+from app.core.config import settings
 from app.core.security import generate_token
 from app.db.session import SessionLocal
 from app.models.answer import Answer, AnswerAnalysis
@@ -15,6 +18,20 @@ from app.repositories import (
     PracticeSessionRepository,
     QuestionRepository,
     UserRepository,
+)
+from ml import AnswerAnalysisInput
+from ml.service import AnalyzerService
+
+logger = logging.getLogger("interviewiq.store")
+analyzer_service = AnalyzerService(
+    provider=settings.analyzer_provider,
+    openai_api_key=settings.openai_api_key,
+    openai_model=settings.openai_model,
+    deepseek_api_key=settings.deepseek_api_key,
+    deepseek_model=settings.deepseek_model,
+    deepseek_base_url=settings.deepseek_base_url,
+    llm_timeout_sec=settings.llm_timeout_sec,
+    max_answer_chars=settings.max_answer_chars,
 )
 
 def iso(value: datetime | None) -> str | None:
@@ -88,6 +105,12 @@ def analysis_to_dict(analysis: AnswerAnalysis) -> dict:
         "to_improve": analysis.to_improve,
         "quick_tips": analysis.quick_tips,
         "ideal_answer_example": analysis.ideal_answer_example,
+        "explanation": analysis.explanation,
+        "provider": analysis.provider,
+        "rubric_version": analysis.rubric_version,
+        "raw_response": analysis.raw_response,
+        "error_message": analysis.error_message,
+        "latency_ms": analysis.latency_ms,
     }
 
 class DatabaseStore:
@@ -263,37 +286,45 @@ class DatabaseStore:
         audio_url: str | None,
         audio_id: str | None,
     ) -> tuple[dict, dict]:
-        text_len = len((answer_text or "").strip())
-        base_score = min(100, 35 + text_len // 4)
-        has_numbers = any(ch.isdigit() for ch in (answer_text or ""))
-        specificity = min(1.0, 0.45 + (0.15 if has_numbers else 0.0) + min(0.3, text_len / 500))
-        analysis_data = {
-            "overall_score": int(base_score),
-            "scores_by_category": {
-                "completeness": round(min(1.0, 0.35 + text_len / 350), 2),
-                "specificity": round(specificity, 2),
-                "structure": 0.62,
-                "confidence": 0.71,
-                "relevance": 0.8,
-            },
-            "strengths": ["Relevant answer direction", "Clear core idea"],
-            "to_improve": [
-                "Add more measurable details",
-                "Describe your personal contribution",
-                "Use STAR structure",
-            ],
-            "quick_tips": [
-                "Speak for 60-120 seconds",
-                "Add one concrete metric",
-                "Finish with impact",
-            ],
-            "ideal_answer_example": (
-                "I led a migration of three legacy services to a new API gateway. "
-                "We cut average response time by 38% and reduced incidents by 42% over two months."
-            ),
-        }
-
         with self.db() as db:
+            question = QuestionRepository(db).get(question_id)
+            if question is None:
+                raise ValueError("Question not found")
+
+            payload = AnswerAnalysisInput(
+                answer_text=answer_text,
+                question_title=question.title,
+                question_description=question.description,
+                category=question.category,
+                difficulty=question.difficulty,
+                has_audio=bool(audio_url or audio_id),
+                audio_url=audio_url,
+            )
+            result = analyzer_service.analyze(payload, session_id=session["id"])
+            analysis_data = result.model_dump(
+                include={
+                    "overall_score",
+                    "scores_by_category",
+                    "strengths",
+                    "to_improve",
+                    "quick_tips",
+                    "ideal_answer_example",
+                    "explanation",
+                    "provider",
+                    "rubric_version",
+                    "raw_response",
+                    "error_message",
+                    "latency_ms",
+                }
+            )
+            logger.info(
+                "Persisting answer analysis",
+                extra={
+                    "session_id": session["id"],
+                    "provider": result.provider,
+                    "score": result.overall_score,
+                },
+            )
             answer, analysis = AnswerRepository(db).create_with_analysis(
                 session_id=session["id"],
                 question_id=question_id,
