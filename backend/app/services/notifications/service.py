@@ -7,7 +7,10 @@ from app.services.notifications.mock import MockNotificationProvider
 class NotificationService:
     def __init__(self) -> None:
         self.mock = MockNotificationProvider()
-        self.fcm = FcmNotificationProvider(server_key=settings.fcm_server_key)
+        self.fcm = FcmNotificationProvider(
+            project_id=settings.fcm_project_id,
+            service_account_path=settings.fcm_service_account_path,
+        )
 
     def send_reminder(self, device_token: DeviceToken, title: str, body: str) -> NotificationResult:
         message = NotificationMessage(

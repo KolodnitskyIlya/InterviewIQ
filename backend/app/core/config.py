@@ -38,5 +38,7 @@ class Settings:
     whisper_device: str = os.getenv("WHISPER_DEVICE", "cpu")
     whisper_compute_type: str = os.getenv("WHISPER_COMPUTE_TYPE", "int8")
     fcm_server_key: str = os.getenv("FCM_SERVER_KEY", "")
+    fcm_project_id: str = os.getenv("FCM_PROJECT_ID", "")
+    fcm_service_account_path: str = os.getenv("FCM_SERVICE_ACCOUNT_PATH", "")
 
 settings = Settings()

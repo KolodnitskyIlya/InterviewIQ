@@ -9,3 +9,4 @@ python-dotenv==1.0.1
 boto3==1.35.54
 gigachat
 faster-whisper
+google-auth==2.35.0
