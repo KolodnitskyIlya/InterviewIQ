@@ -119,13 +119,6 @@ export const interviewIqApi = {
       },
     );
   },
-  uploadAnswerAudio(sessionId: string, payload: AudioUploadRequest) {
-    return request<AudioUploadResponse>(`/practice/sessions/${sessionId}/audio`, {
-      method: "POST",
-      auth: true,
-      body: payload,
-    });
-  },
   getAnswerAnalysis(sessionId: string, answerId: string) {
     return request<AnswerAnalysisResponse>(
       `/practice/sessions/${sessionId}/answers/${answerId}/analysis`,

@@ -25,11 +25,10 @@ from ml.service import AnalyzerService
 logger = logging.getLogger("interviewiq.store")
 analyzer_service = AnalyzerService(
     provider=settings.analyzer_provider,
-    openai_api_key=settings.openai_api_key,
-    openai_model=settings.openai_model,
-    deepseek_api_key=settings.deepseek_api_key,
-    deepseek_model=settings.deepseek_model,
-    deepseek_base_url=settings.deepseek_base_url,
+    gigachat_credentials=settings.gigachat_credentials,
+    gigachat_model=settings.gigachat_model,
+    gigachat_scope=settings.gigachat_scope,
+    gigachat_verify_ssl_certs=settings.gigachat_verify_ssl_certs,
     llm_timeout_sec=settings.llm_timeout_sec,
     max_answer_chars=settings.max_answer_chars,
 )

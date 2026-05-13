@@ -3,8 +3,7 @@ import logging
 import time
 from ml.base import AnswerAnalysisInput, AnswerAnalysisResult
 from ml.baseline import BaselineAnalyzer
-from ml.gigachat import DeepSeekAnalyzer
-from ml.llm import LLMAnalyzer
+from ml.gigachat import GigaChatAnalyzer
 
 logger = logging.getLogger("interviewiq.analyzer")
 
@@ -12,27 +11,21 @@ class AnalyzerService:
     def __init__(
         self,
         provider: str = "baseline",
-        openai_api_key: str = "",
-        openai_model: str = "gpt-4.1-mini",
-        deepseek_api_key: str = "",
-        deepseek_model: str = "deepseek-v4-flash",
-        deepseek_base_url: str = "https://api.deepseek.com",
+        gigachat_credentials: str = "",
+        gigachat_model: str = "GigaChat",
+        gigachat_scope: str = "GIGACHAT_API_PERS",
+        gigachat_verify_ssl_certs: bool = False,
         llm_timeout_sec: int = 20,
         max_answer_chars: int = 6000,
     ) -> None:
         self.provider = provider
         self.max_answer_chars = max_answer_chars
         self.baseline = BaselineAnalyzer()
-        self.llm = LLMAnalyzer(
-            api_key=openai_api_key,
-            model=openai_model,
-            timeout_sec=llm_timeout_sec,
-        )
-        self.deepseek = DeepSeekAnalyzer(
-            api_key=deepseek_api_key,
-            model=deepseek_model,
-            base_url=deepseek_base_url,
-            timeout_sec=llm_timeout_sec,
+        self.gigachat = GigaChatAnalyzer(
+            credentials=gigachat_credentials,
+            model=gigachat_model,
+            scope=gigachat_scope,
+            verify_ssl_certs=gigachat_verify_ssl_certs,
         )
         self._cache: dict[str, AnswerAnalysisResult] = {}
 
@@ -54,10 +47,8 @@ class AnalyzerService:
             if not has_text and not safe_payload.has_audio:
                 result = self.baseline.analyze(safe_payload)
                 result.error_message = "Empty answer without audio was scored by baseline only."
-            elif self.provider == "deepseek":
-                result = self.deepseek.analyze(safe_payload)
-            elif self.provider == "llm":
-                result = self.llm.analyze(safe_payload)
+            elif self.provider == "gigachat":
+                result = self.gigachat.analyze(safe_payload)
             else:
                 result = self.baseline.analyze(safe_payload)
         except Exception as exc:

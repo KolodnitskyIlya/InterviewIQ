@@ -27,11 +27,10 @@ class Settings:
     s3_bucket: str = os.getenv("S3_BUCKET", "interviewiq-audio")
     s3_region: str = os.getenv("S3_REGION", "us-east-1")
     analyzer_provider: str = os.getenv("ANALYZER_PROVIDER", "baseline")
-    openai_api_key: str = os.getenv("OPENAI_API_KEY", "")
-    openai_model: str = os.getenv("OPENAI_MODEL", "gpt-4.1-mini")
-    deepseek_api_key: str = os.getenv("DEEPSEEK_API_KEY", "")
-    deepseek_model: str = os.getenv("DEEPSEEK_MODEL", "deepseek-v4-flash")
-    deepseek_base_url: str = os.getenv("DEEPSEEK_BASE_URL", "https://api.deepseek.com")
+    gigachat_credentials: str = os.getenv("GIGACHAT_CREDENTIALS", "")
+    gigachat_model: str = os.getenv("GIGACHAT_MODEL", "GigaChat")
+    gigachat_scope: str = os.getenv("GIGACHAT_SCOPE", "GIGACHAT_API_PERS")
+    gigachat_verify_ssl_certs: bool = os.getenv("GIGACHAT_VERIFY_SSL_CERTS", "false").lower() == "true"
     llm_timeout_sec: int = int(os.getenv("LLM_TIMEOUT_SEC", "20"))
     max_answer_chars: int = int(os.getenv("MAX_ANSWER_CHARS", "6000"))
 
