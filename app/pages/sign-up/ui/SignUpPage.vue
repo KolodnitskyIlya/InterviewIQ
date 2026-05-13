@@ -78,7 +78,7 @@
 <script lang="ts">
 import { alert } from "@nativescript/core";
 import { defineComponent } from "nativescript-vue";
-import { registerMockPushToken } from "@/features/register-push-token";
+import { registerPushToken } from "@/features/register-push-token";
 import { ApiError, interviewIqApi, saveAuthSession } from "@/shared";
 import PersonalizeExperiencePage from "@/pages/personalize-experience";
 
@@ -165,7 +165,7 @@ export default defineComponent({
           password,
         });
         saveAuthSession(auth);
-        await registerMockPushToken();
+        await registerPushToken();
 
         this.$navigateTo(PersonalizeExperiencePage, {
           clearHistory: true,

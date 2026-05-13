@@ -54,7 +54,7 @@
 <script lang="ts">
 import { defineComponent } from "nativescript-vue";
 
-import { registerMockPushToken } from "@/features/register-push-token";
+import { registerPushToken } from "@/features/register-push-token";
 import { ApiError, getAccessToken, getAuthSession, interviewIqApi } from "@/shared";
 import AnalyticsPage from "@/pages/analytics";
 import PracticePage from "@/pages/practice";
@@ -89,7 +89,7 @@ export default defineComponent({
   },
   mounted() {
     void this.loadUserProfile();
-    void registerMockPushToken();
+    void registerPushToken();
   },
   methods: {
     async loadUserProfile() {

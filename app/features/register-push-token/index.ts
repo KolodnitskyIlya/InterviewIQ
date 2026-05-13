@@ -1,1 +1,1 @@
-export { registerMockPushToken } from "./model/registerMockPushToken";
+export { registerPushToken } from "./model/registerPushToken";

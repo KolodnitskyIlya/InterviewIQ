@@ -73,7 +73,7 @@
 <script lang="ts">
 import { alert } from "@nativescript/core";
 import { defineComponent } from "nativescript-vue";
-import { registerMockPushToken } from "@/features/register-push-token";
+import { registerPushToken } from "@/features/register-push-token";
 import { ApiError, interviewIqApi, saveAuthSession } from "@/shared";
 import HomePage from "@/pages/home";
 import PersonalizeExperiencePage from "@/pages/personalize-experience";
@@ -136,7 +136,7 @@ export default defineComponent({
       try {
         const auth = await interviewIqApi.signIn({ email, password });
         saveAuthSession(auth);
-        await registerMockPushToken();
+        await registerPushToken();
 
         const me = await interviewIqApi.getAuthMe();
         const needsOnboarding = !me.target_role || !me.experience_level;
