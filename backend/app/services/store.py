@@ -2,12 +2,15 @@ from collections.abc import Iterator
 from contextlib import contextmanager
 from datetime import datetime
 import logging
+from pathlib import Path
+import tempfile
 
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
 from app.core.config import settings
 from app.core.security import generate_token
 from app.db.session import SessionLocal
+from app.services.audio_storage import audio_storage
 from app.models.answer import Answer, AnswerAnalysis
 from app.models.practice_session import PracticeSession
 from app.models.question import Question
@@ -21,6 +24,7 @@ from app.repositories import (
 )
 from ml import AnswerAnalysisInput
 from ml.service import AnalyzerService
+from ml.transcription import FasterWhisperTranscriber
 
 logger = logging.getLogger("interviewiq.store")
 analyzer_service = AnalyzerService(
@@ -31,6 +35,11 @@ analyzer_service = AnalyzerService(
     gigachat_verify_ssl_certs=settings.gigachat_verify_ssl_certs,
     analyzer_timeout_sec=settings.analyzer_timeout_sec,
     max_answer_chars=settings.max_answer_chars,
+)
+transcriber = FasterWhisperTranscriber(
+    model_size=settings.whisper_model_size,
+    device=settings.whisper_device,
+    compute_type=settings.whisper_compute_type,
 )
 
 def iso(value: datetime | None) -> str | None:
@@ -89,6 +98,7 @@ def answer_to_dict(answer: Answer) -> dict:
         "session_id": answer.session_id,
         "question_id": answer.question_id,
         "answer_text": answer.answer_text,
+        "transcript": answer.transcript,
         "audio_url": answer.audio_url,
         "audio_id": answer.audio_id,
         "status": answer.status,
@@ -110,6 +120,7 @@ def analysis_to_dict(analysis: AnswerAnalysis) -> dict:
         "raw_response": analysis.raw_response,
         "error_message": analysis.error_message,
         "latency_ms": analysis.latency_ms,
+        "transcript": analysis.answer.transcript if analysis.answer else None,
     }
 
 class DatabaseStore:
@@ -285,19 +296,25 @@ class DatabaseStore:
         audio_url: str | None,
         audio_id: str | None,
     ) -> tuple[dict, dict]:
+        transcript = None
+        clean_answer_text = (answer_text or "").strip() or None
+        if clean_answer_text is None and audio_id:
+            transcript = self._transcribe_audio(audio_id=audio_id, session_id=session["id"])
+
         with self.db() as db:
             question = QuestionRepository(db).get(question_id)
             if question is None:
                 raise ValueError("Question not found")
 
             payload = AnswerAnalysisInput(
-                answer_text=answer_text,
+                answer_text=clean_answer_text,
                 question_title=question.title,
                 question_description=question.description,
                 category=question.category,
                 difficulty=question.difficulty,
                 has_audio=bool(audio_url or audio_id),
                 audio_url=audio_url,
+                transcript=transcript,
             )
             result = analyzer_service.analyze(payload, session_id=session["id"])
             analysis_data = result.model_dump(
@@ -327,12 +344,33 @@ class DatabaseStore:
             answer, analysis = AnswerRepository(db).create_with_analysis(
                 session_id=session["id"],
                 question_id=question_id,
-                answer_text=answer_text,
+                answer_text=clean_answer_text,
+                transcript=transcript,
                 audio_url=audio_url,
                 audio_id=audio_id,
                 analysis_data=analysis_data,
             )
             return answer_to_dict(answer), analysis_to_dict(analysis)
+
+    def _transcribe_audio(self, audio_id: str, session_id: str) -> str | None:
+        suffix = Path(audio_id).suffix or ".m4a"
+        with tempfile.TemporaryDirectory(prefix="interviewiq-audio-") as tmp_dir:
+            audio_path = Path(tmp_dir) / f"answer{suffix}"
+            try:
+                audio_storage.download_audio(audio_id=audio_id, destination=audio_path)
+                result = transcriber.transcribe(audio_path)
+                logger.info(
+                    "Audio transcription completed",
+                    extra={
+                        "session_id": session_id,
+                        "language": result.language,
+                        "language_probability": result.language_probability,
+                    },
+                )
+                return result.text or None
+            except Exception as exc:
+                logger.exception("Audio transcription failed", extra={"session_id": session_id})
+                return None
 
     def get_analysis(self, session: dict, answer_id: str) -> dict | None:
         if answer_id not in session["answer_ids"]:

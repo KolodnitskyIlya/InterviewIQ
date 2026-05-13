@@ -107,6 +107,7 @@ export interface SubmitAnswerResponse {
   session_id: string;
   question_id: string;
   status: string;
+  transcript: string | null;
 }
 
 export interface AudioUploadRequest {
@@ -135,6 +136,7 @@ export interface AnswerAnalysisResponse {
   rubric_version?: string | null;
   error_message?: string | null;
   latency_ms?: number | null;
+  transcript?: string | null;
 }
 
 export interface SessionResultItem {

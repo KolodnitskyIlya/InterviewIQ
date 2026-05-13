@@ -11,6 +11,7 @@ class SubmitAnswerResponse(BaseModel):
     session_id: str
     question_id: str
     status: str
+    transcript: str | None = None
 
 class AnswerAnalysisResponse(BaseModel):
     answer_id: str
@@ -25,6 +26,7 @@ class AnswerAnalysisResponse(BaseModel):
     rubric_version: str | None = None
     error_message: str | None = None
     latency_ms: int | None = None
+    transcript: str | None = None
 
 class AudioUploadRequest(BaseModel):
     question_id: str

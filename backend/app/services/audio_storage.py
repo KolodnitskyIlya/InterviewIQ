@@ -1,4 +1,5 @@
 import base64
+from pathlib import Path
 from uuid import uuid4
 import boto3
 from botocore.client import Config
@@ -49,5 +50,10 @@ class AudioStorage:
             "audio_url": f"{public_base}/{settings.s3_bucket}/{object_key}",
             "content_type": content_type,
         }
+
+    def download_audio(self, audio_id: str, destination: Path) -> Path:
+        destination.parent.mkdir(parents=True, exist_ok=True)
+        self.client.download_file(settings.s3_bucket, audio_id, str(destination))
+        return destination
 
 audio_storage = AudioStorage()

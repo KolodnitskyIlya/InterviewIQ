@@ -33,5 +33,9 @@ class Settings:
     gigachat_verify_ssl_certs: bool = os.getenv("GIGACHAT_VERIFY_SSL_CERTS", "false").lower() == "true"
     analyzer_timeout_sec: int = int(os.getenv("ANALYZER_TIMEOUT_SEC", "20"))
     max_answer_chars: int = int(os.getenv("MAX_ANSWER_CHARS", "6000"))
+    transcriber_provider: str = os.getenv("TRANSCRIBER_PROVIDER", "faster-whisper")
+    whisper_model_size: str = os.getenv("WHISPER_MODEL_SIZE", "base")
+    whisper_device: str = os.getenv("WHISPER_DEVICE", "cpu")
+    whisper_compute_type: str = os.getenv("WHISPER_COMPUTE_TYPE", "int8")
 
 settings = Settings()

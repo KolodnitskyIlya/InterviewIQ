@@ -46,9 +46,10 @@
       <StackLayout row="2" class="bottomArea">
         <TextView
           :text="answerText"
-          hint="Type your answer..."
+          :hint="answerHint"
           class="answerInput"
-          editable="true"
+          :editable="!isVoiceMode"
+          :class="isVoiceMode ? 'answerInputDisabled' : ''"
           @textChange="onAnswerTextChange"
         />
 
@@ -172,6 +173,12 @@ export default defineComponent({
     canSubmit(): boolean {
       return Boolean(this.questionData?.id) && !this.isSubmitting;
     },
+    isVoiceMode(): boolean {
+      return this.isRecording || Boolean(this.recordedAudio);
+    },
+    answerHint(): string {
+      return this.isVoiceMode ? "Voice answer selected" : "Type your answer...";
+    },
     recordButtonText(): string {
       if (this.isRecording) {
         return "Stop voice answer";
@@ -232,6 +239,9 @@ export default defineComponent({
       });
     },
     onAnswerTextChange(args: { value?: string; object?: { text?: string } }) {
+      if (this.isVoiceMode) {
+        return;
+      }
       this.answerText = args.value ?? args.object?.text ?? "";
     },
     async toggleRecording() {
@@ -241,6 +251,7 @@ export default defineComponent({
 
       try {
         if (!this.isRecording) {
+          this.answerText = "";
           startAudioRecording();
           this.recordedAudio = null;
           this.isRecording = true;
@@ -298,7 +309,7 @@ export default defineComponent({
 
         const answer = await interviewIqApi.submitAnswer(this.sessionId, {
           question_id: this.questionData.id,
-          answer_text: this.answerText.trim() || null,
+          answer_text: this.recordedAudio ? null : this.answerText.trim() || null,
           audio_url: audioUrl,
           audio_id: audioId,
         });
@@ -487,6 +498,10 @@ export default defineComponent({
   font-size: 16;
   color: #111827;
   font-family: "Poppins";
+}
+
+.answerInputDisabled {
+  opacity: 0.65;
 }
 
 .recordButton {

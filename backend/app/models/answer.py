@@ -10,6 +10,7 @@ class Answer(Base):
     session_id: Mapped[str] = mapped_column(ForeignKey("practice_sessions.id", ondelete="CASCADE"), index=True)
     question_id: Mapped[str] = mapped_column(ForeignKey("questions.id", ondelete="RESTRICT"), index=True)
     answer_text: Mapped[str | None] = mapped_column(Text, nullable=True)
+    transcript: Mapped[str | None] = mapped_column(Text, nullable=True)
     audio_url: Mapped[str | None] = mapped_column(String(1024), nullable=True)
     audio_id: Mapped[str | None] = mapped_column(String(255), nullable=True)
     status: Mapped[str] = mapped_column(String(30), nullable=False, default="processed")
