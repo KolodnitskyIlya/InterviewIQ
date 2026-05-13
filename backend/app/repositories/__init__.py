@@ -1,5 +1,6 @@
 from app.repositories.answers import AnswerRepository
 from app.repositories.auth_tokens import AuthTokenRepository
+from app.repositories.device_tokens import DeviceTokenRepository
 from app.repositories.practice_sessions import PracticeSessionRepository
 from app.repositories.questions import QuestionRepository
 from app.repositories.users import UserRepository
@@ -7,6 +8,7 @@ from app.repositories.users import UserRepository
 __all__ = [
     "AnswerRepository",
     "AuthTokenRepository",
+    "DeviceTokenRepository",
     "PracticeSessionRepository",
     "QuestionRepository",
     "UserRepository",

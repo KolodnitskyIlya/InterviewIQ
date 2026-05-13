@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "927946128096",
+    "project_id": "interviewiq-5ef17",
+    "storage_bucket": "interviewiq-5ef17.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:927946128096:android:c427b2b815d7e4ae53ae85",
+        "android_client_info": {
+          "package_name": "org.nativescript.InterviewIQ"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyC_RRXR0KLzgsK8OFE7vPVZdFwWP34BltQ"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

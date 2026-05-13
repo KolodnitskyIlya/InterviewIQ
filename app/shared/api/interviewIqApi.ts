@@ -6,7 +6,10 @@ import type {
   AudioUploadRequest,
   AudioUploadResponse,
   CreateSessionRequest,
+  DeviceTokenRegisterRequest,
+  DeviceTokenResponse,
   OnboardingOptionsResponse,
+  ReminderTestResponse,
   OnboardingStateResponse,
   OnboardingUpdateRequest,
   SessionQuestionResponse,
@@ -141,5 +144,22 @@ export const interviewIqApi = {
         auth: true,
       },
     );
+  },
+  registerDeviceToken(payload: DeviceTokenRegisterRequest) {
+    return request<DeviceTokenResponse>("/users/me/device-tokens", {
+      method: "POST",
+      auth: true,
+      body: payload,
+    });
+  },
+  sendTestReminder() {
+    return request<ReminderTestResponse>("/notifications/test-reminder", {
+      method: "POST",
+      auth: true,
+      body: {
+        title: "InterviewIQ",
+        body: "Time to practice your interview answers.",
+      },
+    });
   },
 };

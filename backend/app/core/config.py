@@ -37,5 +37,6 @@ class Settings:
     whisper_model_size: str = os.getenv("WHISPER_MODEL_SIZE", "base")
     whisper_device: str = os.getenv("WHISPER_DEVICE", "cpu")
     whisper_compute_type: str = os.getenv("WHISPER_COMPUTE_TYPE", "int8")
+    fcm_server_key: str = os.getenv("FCM_SERVER_KEY", "")
 
 settings = Settings()
