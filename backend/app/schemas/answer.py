@@ -11,6 +11,7 @@ class SubmitAnswerResponse(BaseModel):
     session_id: str
     question_id: str
     status: str
+    transcript: str | None = None
 
 class AnswerAnalysisResponse(BaseModel):
     answer_id: str
@@ -20,6 +21,12 @@ class AnswerAnalysisResponse(BaseModel):
     to_improve: list[str]
     quick_tips: list[str]
     ideal_answer_example: str
+    explanation: str | None = None
+    provider: str | None = None
+    rubric_version: str | None = None
+    error_message: str | None = None
+    latency_ms: int | None = None
+    transcript: str | None = None
 
 class AudioUploadRequest(BaseModel):
     question_id: str

@@ -1,6 +1,9 @@
 <template>
   <Page actionBarHidden="true" class="page">
-    <GridLayout rows="auto, auto, auto, auto, auto, auto, *, auto" class="container">
+    <GridLayout
+      rows="auto, auto, auto, auto, auto, auto, *, auto"
+      class="container"
+    >
       <Label row="0" text="Welcome back" class="title" />
       <Label
         row="1"
@@ -136,9 +139,12 @@ export default defineComponent({
         const me = await interviewIqApi.getAuthMe();
         const needsOnboarding = !me.target_role || !me.experience_level;
 
-        this.$navigateTo(needsOnboarding ? PersonalizeExperiencePage : HomePage, {
-          clearHistory: true,
-        });
+        this.$navigateTo(
+          needsOnboarding ? PersonalizeExperiencePage : HomePage,
+          {
+            clearHistory: true,
+          },
+        );
       } catch (error) {
         await alert({
           title: "Sign In failed",

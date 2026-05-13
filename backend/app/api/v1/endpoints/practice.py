@@ -136,6 +136,7 @@ def submit_answer(
         "session_id": session_id,
         "question_id": answer["question_id"],
         "status": answer["status"],
+        "transcript": answer["transcript"],
     }
 
 

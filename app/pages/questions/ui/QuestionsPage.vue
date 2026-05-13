@@ -46,9 +46,10 @@
       <StackLayout row="2" class="bottomArea">
         <TextView
           :text="answerText"
-          hint="Type your answer..."
+          :hint="answerHint"
           class="answerInput"
-          editable="true"
+          :editable="!isVoiceMode"
+          :class="isVoiceMode ? 'answerInputDisabled' : ''"
           @textChange="onAnswerTextChange"
         />
 
@@ -150,8 +151,12 @@ export default defineComponent({
           id: "",
           category: this.selectedCategory,
           difficulty: "",
-          title: this.isLoading ? "Loading question..." : "Question unavailable",
-          description: this.isLoading ? "Please wait." : "Try going back and starting a new session.",
+          title: this.isLoading
+            ? "Loading question..."
+            : "Question unavailable",
+          description: this.isLoading
+            ? "Please wait."
+            : "Try going back and starting a new session.",
         }
       );
     },
@@ -168,6 +173,12 @@ export default defineComponent({
     canSubmit(): boolean {
       return Boolean(this.questionData?.id) && !this.isSubmitting;
     },
+    isVoiceMode(): boolean {
+      return this.isRecording || Boolean(this.recordedAudio);
+    },
+    answerHint(): string {
+      return this.isVoiceMode ? "Voice answer selected" : "Type your answer...";
+    },
     recordButtonText(): string {
       if (this.isRecording) {
         return "Stop voice answer";
@@ -179,7 +190,9 @@ export default defineComponent({
     async loadCurrentQuestion() {
       this.isLoading = true;
       try {
-        const response = await interviewIqApi.getCurrentQuestion(this.sessionId);
+        const response = await interviewIqApi.getCurrentQuestion(
+          this.sessionId,
+        );
         this.questionData = response.question;
       } catch (error) {
         if (error instanceof ApiError && error.status === 401) {
@@ -189,7 +202,8 @@ export default defineComponent({
 
         await alert({
           title: "Failed to load question",
-          message: error instanceof ApiError ? error.message : "Please try again.",
+          message:
+            error instanceof ApiError ? error.message : "Please try again.",
           okButtonText: "OK",
         });
       } finally {
@@ -225,6 +239,9 @@ export default defineComponent({
       });
     },
     onAnswerTextChange(args: { value?: string; object?: { text?: string } }) {
+      if (this.isVoiceMode) {
+        return;
+      }
       this.answerText = args.value ?? args.object?.text ?? "";
     },
     async toggleRecording() {
@@ -234,6 +251,7 @@ export default defineComponent({
 
       try {
         if (!this.isRecording) {
+          this.answerText = "";
           startAudioRecording();
           this.recordedAudio = null;
           this.isRecording = true;
@@ -246,13 +264,20 @@ export default defineComponent({
         this.isRecording = false;
         await alert({
           title: "Voice recording unavailable",
-          message: error instanceof Error ? error.message : "Please use text answer for now.",
+          message:
+            error instanceof Error
+              ? error.message
+              : "Please use text answer for now.",
           okButtonText: "OK",
         });
       }
     },
     async submitCurrentAnswer() {
-      if (!this.questionData || this.isSubmitting || this.hasNavigatedToResults) {
+      if (
+        !this.questionData ||
+        this.isSubmitting ||
+        this.hasNavigatedToResults
+      ) {
         return;
       }
 
@@ -269,23 +294,29 @@ export default defineComponent({
         }
 
         if (this.recordedAudio) {
-          const upload = await interviewIqApi.uploadAnswerAudio(this.sessionId, {
-            question_id: this.questionData.id,
-            file_name: this.recordedAudio.fileName,
-            content_type: this.recordedAudio.contentType,
-            audio_base64: this.recordedAudio.audioBase64,
-          });
+          const upload = await interviewIqApi.uploadAnswerAudio(
+            this.sessionId,
+            {
+              question_id: this.questionData.id,
+              file_name: this.recordedAudio.fileName,
+              content_type: this.recordedAudio.contentType,
+              audio_base64: this.recordedAudio.audioBase64,
+            },
+          );
           audioUrl = upload.audio_url;
           audioId = upload.audio_id;
         }
 
         const answer = await interviewIqApi.submitAnswer(this.sessionId, {
           question_id: this.questionData.id,
-          answer_text: this.answerText.trim() || null,
+          answer_text: this.recordedAudio ? null : this.answerText.trim() || null,
           audio_url: audioUrl,
           audio_id: audioId,
         });
-        const analysis = await interviewIqApi.getAnswerAnalysis(this.sessionId, answer.answer_id);
+        const analysis = await interviewIqApi.getAnswerAnalysis(
+          this.sessionId,
+          answer.answer_id,
+        );
         this.goToResults(answer.answer_id, analysis.overall_score);
       } catch (error) {
         this.startTicking();
@@ -296,7 +327,8 @@ export default defineComponent({
 
         await alert({
           title: "Failed to submit answer",
-          message: error instanceof ApiError ? error.message : "Please try again.",
+          message:
+            error instanceof ApiError ? error.message : "Please try again.",
           okButtonText: "OK",
         });
       } finally {
@@ -466,6 +498,10 @@ export default defineComponent({
   font-size: 16;
   color: #111827;
   font-family: "Poppins";
+}
+
+.answerInputDisabled {
+  opacity: 0.65;
 }
 
 .recordButton {

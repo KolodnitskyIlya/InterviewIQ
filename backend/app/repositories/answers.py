@@ -12,6 +12,7 @@ class AnswerRepository:
         session_id: str,
         question_id: str,
         answer_text: str | None,
+        transcript: str | None,
         audio_url: str | None,
         audio_id: str | None,
         analysis_data: dict,
@@ -21,6 +22,7 @@ class AnswerRepository:
             session_id=session_id,
             question_id=question_id,
             answer_text=answer_text,
+            transcript=transcript,
             audio_url=audio_url,
             audio_id=audio_id,
             status="processed",
@@ -32,6 +34,16 @@ class AnswerRepository:
         self.db.add(analysis)
         self.db.flush()
         return answer, analysis
+
+    def get_existing_analysis_by_cache_key(self, question_id: str, answer_text: str | None) -> AnswerAnalysis | None:
+        stmt = (
+            select(AnswerAnalysis)
+            .join(Answer, Answer.id == AnswerAnalysis.answer_id)
+            .where(Answer.question_id == question_id, Answer.answer_text == answer_text)
+            .order_by(Answer.created_at.desc())
+            .limit(1)
+        )
+        return self.db.scalars(stmt).first()
 
     def get_analysis(self, answer_id: str) -> AnswerAnalysis | None:
         return self.db.get(AnswerAnalysis, answer_id)

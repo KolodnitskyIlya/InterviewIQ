@@ -69,10 +69,13 @@ export const interviewIqApi = {
     });
   },
   startPracticeSession(sessionId: string) {
-    return request<SessionStateResponse>(`/practice/sessions/${sessionId}/start`, {
-      method: "POST",
-      auth: true,
-    });
+    return request<SessionStateResponse>(
+      `/practice/sessions/${sessionId}/start`,
+      {
+        method: "POST",
+        auth: true,
+      },
+    );
   },
   getPracticeSession(sessionId: string) {
     return request<SessionStateResponse>(`/practice/sessions/${sessionId}`, {
@@ -80,29 +83,41 @@ export const interviewIqApi = {
     });
   },
   getCurrentQuestion(sessionId: string) {
-    return request<SessionQuestionResponse>(`/practice/sessions/${sessionId}/questions/current`, {
-      auth: true,
-    });
+    return request<SessionQuestionResponse>(
+      `/practice/sessions/${sessionId}/questions/current`,
+      {
+        auth: true,
+      },
+    );
   },
   nextQuestion(sessionId: string) {
-    return request<SessionQuestionResponse>(`/practice/sessions/${sessionId}/questions/next`, {
-      method: "POST",
-      auth: true,
-    });
+    return request<SessionQuestionResponse>(
+      `/practice/sessions/${sessionId}/questions/next`,
+      {
+        method: "POST",
+        auth: true,
+      },
+    );
   },
   submitAnswer(sessionId: string, payload: SubmitAnswerRequest) {
-    return request<SubmitAnswerResponse>(`/practice/sessions/${sessionId}/answers`, {
-      method: "POST",
-      auth: true,
-      body: payload,
-    });
+    return request<SubmitAnswerResponse>(
+      `/practice/sessions/${sessionId}/answers`,
+      {
+        method: "POST",
+        auth: true,
+        body: payload,
+      },
+    );
   },
   uploadAnswerAudio(sessionId: string, payload: AudioUploadRequest) {
-    return request<AudioUploadResponse>(`/practice/sessions/${sessionId}/audio`, {
-      method: "POST",
-      auth: true,
-      body: payload,
-    });
+    return request<AudioUploadResponse>(
+      `/practice/sessions/${sessionId}/audio`,
+      {
+        method: "POST",
+        auth: true,
+        body: payload,
+      },
+    );
   },
   getAnswerAnalysis(sessionId: string, answerId: string) {
     return request<AnswerAnalysisResponse>(
@@ -111,14 +126,20 @@ export const interviewIqApi = {
     );
   },
   finishPracticeSession(sessionId: string) {
-    return request<SessionStateResponse>(`/practice/sessions/${sessionId}/finish`, {
-      method: "POST",
-      auth: true,
-    });
+    return request<SessionStateResponse>(
+      `/practice/sessions/${sessionId}/finish`,
+      {
+        method: "POST",
+        auth: true,
+      },
+    );
   },
   getSessionResults(sessionId: string) {
-    return request<SessionResultsResponse>(`/practice/sessions/${sessionId}/results`, {
-      auth: true,
-    });
+    return request<SessionResultsResponse>(
+      `/practice/sessions/${sessionId}/results`,
+      {
+        auth: true,
+      },
+    );
   },
 };
