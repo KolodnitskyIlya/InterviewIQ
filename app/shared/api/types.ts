@@ -154,3 +154,34 @@ export interface SessionResultsResponse {
   question_results: SessionResultItem[];
   finished_at: string | null;
 }
+
+export interface DeviceTokenRegisterRequest {
+  token: string;
+  platform: string;
+  provider: string;
+  app_version?: string | null;
+  device_id?: string | null;
+}
+
+export interface DeviceTokenResponse {
+  id: string;
+  token: string;
+  platform: string;
+  provider: string;
+  app_version: string | null;
+  device_id: string | null;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface ReminderTestResponse {
+  sent: number;
+  failed: number;
+  results: Array<{
+    token_id: string;
+    provider: string;
+    success: boolean;
+    message_id: string | null;
+    error: string | null;
+  }>;
+}
