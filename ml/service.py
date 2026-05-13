@@ -15,7 +15,7 @@ class AnalyzerService:
         gigachat_model: str = "GigaChat",
         gigachat_scope: str = "GIGACHAT_API_PERS",
         gigachat_verify_ssl_certs: bool = False,
-        llm_timeout_sec: int = 20,
+        analyzer_timeout_sec: int = 20,
         max_answer_chars: int = 6000,
     ) -> None:
         self.provider = provider
@@ -26,6 +26,7 @@ class AnalyzerService:
             model=gigachat_model,
             scope=gigachat_scope,
             verify_ssl_certs=gigachat_verify_ssl_certs,
+            timeout_sec=analyzer_timeout_sec,
         )
         self._cache: dict[str, AnswerAnalysisResult] = {}
 

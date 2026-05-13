@@ -17,11 +17,13 @@ class GigaChatAnalyzer:
         model: str = "GigaChat",
         scope: str = "GIGACHAT_API_PERS",
         verify_ssl_certs: bool = False,
+        timeout_sec: int = 20,
     ) -> None:
         self.credentials = credentials
         self.model = model
         self.scope = scope
         self.verify_ssl_certs = verify_ssl_certs
+        self.timeout_sec = timeout_sec
 
     def analyze(self, payload: AnswerAnalysisInput) -> AnswerAnalysisResult:
         if not self.credentials:
@@ -49,6 +51,7 @@ class GigaChatAnalyzer:
             scope=self.scope,
             model=self.model,
             verify_ssl_certs=self.verify_ssl_certs,
+            timeout=self.timeout_sec,
         ) as giga:
             response = giga.chat(
                 {
@@ -150,6 +153,7 @@ def main() -> None:
         model=os.getenv("GIGACHAT_MODEL", "GigaChat"),
         scope=os.getenv("GIGACHAT_SCOPE", "GIGACHAT_API_PERS"),
         verify_ssl_certs=os.getenv("GIGACHAT_VERIFY_SSL_CERTS", "false").lower() == "true",
+        timeout_sec=int(os.getenv("ANALYZER_TIMEOUT_SEC", "20")),
     ).analyze(payload)
     print(result.model_dump_json(indent=2))
 

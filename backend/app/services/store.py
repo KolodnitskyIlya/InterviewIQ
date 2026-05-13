@@ -29,7 +29,7 @@ analyzer_service = AnalyzerService(
     gigachat_model=settings.gigachat_model,
     gigachat_scope=settings.gigachat_scope,
     gigachat_verify_ssl_certs=settings.gigachat_verify_ssl_certs,
-    llm_timeout_sec=settings.llm_timeout_sec,
+    analyzer_timeout_sec=settings.analyzer_timeout_sec,
     max_answer_chars=settings.max_answer_chars,
 )
 

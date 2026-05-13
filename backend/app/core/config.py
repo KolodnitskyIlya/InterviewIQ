@@ -31,7 +31,7 @@ class Settings:
     gigachat_model: str = os.getenv("GIGACHAT_MODEL", "GigaChat")
     gigachat_scope: str = os.getenv("GIGACHAT_SCOPE", "GIGACHAT_API_PERS")
     gigachat_verify_ssl_certs: bool = os.getenv("GIGACHAT_VERIFY_SSL_CERTS", "false").lower() == "true"
-    llm_timeout_sec: int = int(os.getenv("LLM_TIMEOUT_SEC", "20"))
+    analyzer_timeout_sec: int = int(os.getenv("ANALYZER_TIMEOUT_SEC", "20"))
     max_answer_chars: int = int(os.getenv("MAX_ANSWER_CHARS", "6000"))
 
 settings = Settings()
