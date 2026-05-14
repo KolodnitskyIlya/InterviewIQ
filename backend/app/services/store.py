@@ -239,6 +239,8 @@ class DatabaseStore:
             question_repo = QuestionRepository(db)
             candidates = question_repo.list_questions(category=category, difficulty=difficulty, limit=50)
             if not candidates:
+                candidates = question_repo.list_questions(category=category, limit=50)
+            if not candidates:
                 candidates = question_repo.list_questions(limit=50)
             if not candidates:
                 raise ValueError("No questions available")

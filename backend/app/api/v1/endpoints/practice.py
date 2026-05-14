@@ -36,7 +36,16 @@ def _session_state(session: dict) -> dict:
 @router.get("/practice/config", response_model=PracticeConfigResponse)
 def practice_config() -> dict:
     return {
-        "categories": ["technical", "behavioral", "system-design", "hr"],
+        "categories": [
+            "adaptability",
+            "career-goals",
+            "conflict-resolution",
+            "culture-fit",
+            "leadership",
+            "motivation",
+            "team-collaboration",
+            "work-style",
+        ],
         "difficulties": ["easy", "medium", "hard"],
         "time_limits_sec": [30, 45, 60, 90, 120],
         "question_count_options": [3, 5, 10],

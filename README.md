@@ -80,4 +80,29 @@ Android emulator uses `http://10.0.2.2:8000/api/v1` by default. iOS/local uses `
 ## Notes
 
 - PostgreSQL can easily handle thousands of interview questions for this project. Keep indexes on `category` and `difficulty` and paginate API responses if the dataset grows very large.
+- To import the full HR dataset from `dataset/hr_interview_questions_dataset.json`, run:
+
+```bash
+cd backend
+python -m app.scripts.seed_dataset_questions
+```
+
+  For a quick smoke test, import a small slice first:
+
+```bash
+python -m app.scripts.seed_dataset_questions --limit 1000
+```
+
+  By default, HR dataset topics are mapped to practice categories:
+  `adaptability`, `career-goals`, `conflict-resolution`, `culture-fit`, `leadership`,
+  `motivation`, `team-collaboration`, and `work-style`.
+
+  If you have another dataset with the same JSON shape, choose the application category explicitly:
+
+```bash
+python -m app.scripts.seed_dataset_questions --path ..\dataset\technical_questions.json --target-category technical
+python -m app.scripts.seed_dataset_questions --path ..\dataset\behavioral_questions.json --target-category behavioral
+python -m app.scripts.seed_dataset_questions --path ..\dataset\system_design_questions.json --target-category system-design
+```
+
 - Dark Mode is currently only a preference toggle. Full theme support needs a separate pass over global colors and component styles.

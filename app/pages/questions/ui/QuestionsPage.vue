@@ -32,7 +32,7 @@
       </StackLayout>
 
       <StackLayout row="1" class="questionSection" verticalAlignment="middle">
-        <Label :text="question.category" class="categoryBadge" />
+        <Label :text="categoryLabel(question.category)" class="categoryBadge" />
         <StackLayout class="questionCard">
           <Label :text="question.title" class="questionTitle" textWrap="true" />
           <Label
@@ -93,6 +93,13 @@ function formatSeconds(totalSeconds: number): string {
   return `${minutes}:${seconds.toString().padStart(2, "0")}`;
 }
 
+function toCategoryLabel(value: string): string {
+  return value
+    .split("-")
+    .map((part) => part.charAt(0).toUpperCase() + part.slice(1))
+    .join(" ");
+}
+
 export default defineComponent({
   name: "QuestionsPage",
   props: {
@@ -106,7 +113,7 @@ export default defineComponent({
     },
     selectedCategory: {
       type: String,
-      default: "Technical",
+      default: "adaptability",
     },
     timeLimit: {
       type: String,
@@ -357,6 +364,9 @@ export default defineComponent({
           curve: "easeInOut",
         },
       });
+    },
+    categoryLabel(category: string): string {
+      return toCategoryLabel(category);
     },
   },
 });

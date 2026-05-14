@@ -164,7 +164,7 @@ export default defineComponent({
       try {
         const timeLimitSec = parseTimeLimitToSeconds(this.selectedTime || "60 sec");
         const created = await interviewIqApi.createPracticeSession({
-          category: this.selectedCategory || "technical",
+          category: this.selectedCategory || "adaptability",
           difficulty: this.selectedDifficulty || "easy",
           time_limit_sec: timeLimitSec,
           question_count: 3,
