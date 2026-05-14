@@ -30,11 +30,27 @@ typings/
 # Backend
 __pycache__
 .venv
+venv/
+backend/.venv/
+backend/api.env
+api.env
 *.md
 !README.md
 
 # Dataset
 dataset
+dataset/
+datasets/
+*.csv
+*.jsonl
+
+# MinIO / local object storage
+minio_data/
+minio-data/
+.minio/
 
 # firebase key
 interviewiq-5ef17-firebase-adminsdk-fbsvc-7eb1828155.json
+*firebase-adminsdk*.json
+serviceAccount*.json
+service-account*.json

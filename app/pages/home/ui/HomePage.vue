@@ -4,23 +4,37 @@
       <ScrollView row="0">
         <StackLayout class="content">
           <StackLayout class="hero">
-            <Label text="Good evening," class="greeting" />
+            <Label text="Hello," class="greeting" />
             <Label :text="userGreeting" class="userName" textWrap="true" />
-            <ProgressCard :value="78" />
+            <ProgressCard
+              :value="progressValue"
+              :subtitle="progressSubtitle"
+              :trend="progressTrend"
+            />
           </StackLayout>
 
           <StackLayout class="body">
             <Button
-              text="▷ Start Practice Session"
+              text="Start Practice Session"
               class="startButton"
               @tap="openPractice"
             />
-            <Label text="Continue where you left off" class="sectionTitle" />
 
-            <GridLayout columns="auto, *" class="sessionCard">
+            <Label
+              v-if="resumeSession"
+              text="Continue where you left off"
+              class="sectionTitle"
+            />
+
+            <GridLayout
+              v-if="resumeSession"
+              columns="auto, *"
+              class="sessionCard"
+              @tap="resumePractice"
+            >
               <GridLayout col="0" class="sessionIcon">
                 <Label
-                  text="🕒"
+                  text=">"
                   class="sessionIconText"
                   horizontalAlignment="center"
                   verticalAlignment="center"
@@ -28,13 +42,20 @@
               </GridLayout>
 
               <StackLayout col="1" class="sessionInfo">
-                <Label text="System Design Practice" class="sessionTitle" textWrap="true" />
-                <Label text="Question 7 of 10 • 15 min left" class="sessionMeta" textWrap="true" />
+                <Label
+                  text="Active practice session"
+                  class="sessionTitle"
+                  textWrap="true"
+                />
+                <Label :text="resumeMeta" class="sessionMeta" textWrap="true" />
               </StackLayout>
             </GridLayout>
 
             <StackLayout class="improvementSection">
-              <ImprovementList />
+              <ImprovementList
+                :metrics="improvementMetrics"
+                :sessions="recentSessionScores"
+              />
             </StackLayout>
           </StackLayout>
         </StackLayout>
@@ -54,11 +75,22 @@
 <script lang="ts">
 import { defineComponent } from "nativescript-vue";
 
+import type {
+  HomeDashboardResponse,
+  AnalyticsSessionItemResponse,
+} from "@/shared";
 import { registerPushToken } from "@/features/register-push-token";
-import { ApiError, getAccessToken, getAuthSession, interviewIqApi } from "@/shared";
+import {
+  ApiError,
+  getAccessToken,
+  getAuthSession,
+  interviewIqApi,
+} from "@/shared";
+import type { ImprovementMetric, SessionScore } from "@/entities/analytics";
 import AnalyticsPage from "@/pages/analytics";
 import PracticePage from "@/pages/practice";
 import ProfilePage from "@/pages/profile";
+import QuestionsPage from "@/pages/questions";
 import SignInPage from "@/pages/sign-in";
 import BottomNavigation from "@/widgets/bottom-navigation";
 import ImprovementList from "@/widgets/improvement-list";
@@ -66,6 +98,30 @@ import ProgressCard from "@/widgets/progress-card";
 
 function getFirstName(fullName: string): string {
   return fullName.trim().split(/\s+/).filter(Boolean)[0] || "User";
+}
+
+function formatSessionDate(value: string | null): string {
+  if (!value) {
+    return "Recently";
+  }
+
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) {
+    return "Recently";
+  }
+
+  return date.toLocaleDateString("en-US", {
+    month: "short",
+    day: "numeric",
+    year: "numeric",
+  });
+}
+
+function sessionTitle(session: AnalyticsSessionItemResponse): string {
+  return session.category
+    .split("-")
+    .map((part) => part.charAt(0).toUpperCase() + part.slice(1))
+    .join(" ");
 }
 
 export default defineComponent({
@@ -79,16 +135,32 @@ export default defineComponent({
     const session = getAuthSession();
 
     return {
-      userName: session?.user.full_name ? getFirstName(session.user.full_name) : "User",
+      userName: session?.user.full_name
+        ? getFirstName(session.user.full_name)
+        : "User",
+      progressValue: 0,
+      progressTrend: "0% this week",
+      progressSubtitle: "Complete a session to build your readiness score.",
+      improvementMetrics: [] as ImprovementMetric[],
+      recentSessionScores: [] as SessionScore[],
+      resumeSession: null as HomeDashboardResponse["resume_session"],
     };
   },
   computed: {
     userGreeting(): string {
-      return `${this.userName} 👋`;
+      return `${this.userName}`;
+    },
+    resumeMeta(): string {
+      if (!this.resumeSession) {
+        return "";
+      }
+
+      return `Question ${this.resumeSession.question_index} of ${this.resumeSession.total_questions}`;
     },
   },
   mounted() {
     void this.loadUserProfile();
+    void this.loadDashboard();
     void registerPushToken();
   },
   methods: {
@@ -101,6 +173,61 @@ export default defineComponent({
       try {
         const profile = await interviewIqApi.getProfile();
         this.userName = getFirstName(profile.full_name);
+      } catch (error) {
+        if (error instanceof ApiError && error.status === 401) {
+          this.$navigateTo(SignInPage, { clearHistory: true });
+        }
+      }
+    },
+    async loadDashboard() {
+      if (!getAccessToken()) {
+        return;
+      }
+
+      try {
+        const dashboard = await interviewIqApi.getHomeDashboard();
+        this.progressValue = dashboard.progress_card.value;
+        this.progressTrend = dashboard.progress_card.trend;
+        this.progressSubtitle = dashboard.progress_card.subtitle;
+        this.improvementMetrics = dashboard.areas_to_improve.map((item) => ({
+          label: item.skill,
+          value: item.score,
+        }));
+        this.recentSessionScores = dashboard.recent_sessions.map((session) => ({
+          title: sessionTitle(session),
+          date: formatSessionDate(session.completed_at),
+          score: session.score,
+        }));
+        this.resumeSession = dashboard.resume_session;
+      } catch (error) {
+        if (error instanceof ApiError && error.status === 401) {
+          this.$navigateTo(SignInPage, { clearHistory: true });
+        }
+      }
+    },
+    async resumePractice() {
+      if (!this.resumeSession) {
+        return;
+      }
+
+      try {
+        const session = await interviewIqApi.startPracticeSession(
+          this.resumeSession.session_id,
+        );
+        this.$navigateTo(QuestionsPage, {
+          clearHistory: true,
+          props: {
+            sessionId: session.id,
+            currentQuestionIndex: session.current_question_index,
+            totalQuestions: session.question_count,
+            timeLimitSec: session.time_limit_sec,
+          },
+          transition: {
+            name: "slideLeft",
+            duration: 280,
+            curve: "easeInOut",
+          },
+        });
       } catch (error) {
         if (error instanceof ApiError && error.status === 401) {
           this.$navigateTo(SignInPage, { clearHistory: true });
