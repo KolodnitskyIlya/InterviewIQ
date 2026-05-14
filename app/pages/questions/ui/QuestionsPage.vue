@@ -143,7 +143,6 @@ export default defineComponent({
   },
   mounted() {
     void this.loadCurrentQuestion();
-    this.startTicking();
   },
   beforeUnmount() {
     this.stopTicking();
@@ -178,7 +177,7 @@ export default defineComponent({
       return formatSeconds(this.remainingSeconds);
     },
     canSubmit(): boolean {
-      return Boolean(this.questionData?.id) && !this.isSubmitting;
+      return Boolean(this.questionData?.id) && !this.isSubmitting && !this.isLoading;
     },
     isVoiceMode(): boolean {
       return this.isRecording || Boolean(this.recordedAudio);
@@ -201,6 +200,9 @@ export default defineComponent({
           this.sessionId,
         );
         this.questionData = response.question;
+        if (this.questionData) {
+          this.startTicking();
+        }
       } catch (error) {
         if (error instanceof ApiError && error.status === 401) {
           this.$navigateTo(SignInPage, { clearHistory: true });
@@ -218,7 +220,7 @@ export default defineComponent({
       }
     },
     startTicking() {
-      if (this.timerInterval) {
+      if (this.timerInterval || this.remainingSeconds <= 0) {
         return;
       }
       this.timerInterval = setInterval(() => {
@@ -326,10 +328,16 @@ export default defineComponent({
         );
         this.goToResults(answer.answer_id, analysis.overall_score);
       } catch (error) {
-        this.startTicking();
+        if (this.remainingSeconds > 0) {
+          this.startTicking();
+        }
         if (error instanceof ApiError && error.status === 401) {
           this.$navigateTo(SignInPage, { clearHistory: true });
           return;
+        }
+
+        if (this.recordedAudio) {
+          this.recordedAudio = null;
         }
 
         await alert({

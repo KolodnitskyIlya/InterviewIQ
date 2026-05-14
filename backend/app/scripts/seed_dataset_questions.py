@@ -122,7 +122,7 @@ def question_id(item: dict[str, Any], target_category: str) -> str:
 def truncate(value: str, limit: int) -> str:
     return value if len(value) <= limit else value[: limit - 1].rstrip() + "..."
 
-def dataset_item_to_question(item: dict[str, Any], target_category: str) -> dict[str, str]:
+def dataset_item_to_question(item: dict[str, Any], target_category: str) -> dict[str, str | None]:
     question = str(item.get("question") or "").strip()
     role = str(item.get("role") or "").strip()
     experience = str(item.get("experience") or "").strip()
@@ -145,11 +145,12 @@ def dataset_item_to_question(item: dict[str, Any], target_category: str) -> dict
         "id": question_id(item, target_category),
         "category": category,
         "difficulty": normalize_difficulty(item.get("difficulty")),
+        "target_role": truncate(role, 120) or None,
         "title": truncate(question, 255),
         "description": " ".join(description_parts) or "Practice a concise, structured HR interview answer.",
     }
 
-def flush_batch(batch: list[dict[str, str]]) -> None:
+def flush_batch(batch: list[dict[str, str | None]]) -> None:
     if not batch:
         return
 
@@ -161,6 +162,7 @@ def flush_batch(batch: list[dict[str, str]]) -> None:
         set_={
             "category": statement.excluded.category,
             "difficulty": statement.excluded.difficulty,
+            "target_role": statement.excluded.target_role,
             "title": statement.excluded.title,
             "description": statement.excluded.description,
         },
@@ -192,7 +194,7 @@ def main() -> None:
     if not args.path.exists():
         raise FileNotFoundError(f"Dataset file not found: {args.path}")
 
-    batch: list[dict[str, str]] = []
+    batch: list[dict[str, str | None]] = []
     processed = 0
 
     for item in iter_json_array(args.path):

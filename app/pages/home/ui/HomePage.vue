@@ -20,37 +20,6 @@
               @tap="openPractice"
             />
 
-            <Label
-              v-if="resumeSession"
-              text="Continue where you left off"
-              class="sectionTitle"
-            />
-
-            <GridLayout
-              v-if="resumeSession"
-              columns="auto, *"
-              class="sessionCard"
-              @tap="resumePractice"
-            >
-              <GridLayout col="0" class="sessionIcon">
-                <Label
-                  text=">"
-                  class="sessionIconText"
-                  horizontalAlignment="center"
-                  verticalAlignment="center"
-                />
-              </GridLayout>
-
-              <StackLayout col="1" class="sessionInfo">
-                <Label
-                  text="Active practice session"
-                  class="sessionTitle"
-                  textWrap="true"
-                />
-                <Label :text="resumeMeta" class="sessionMeta" textWrap="true" />
-              </StackLayout>
-            </GridLayout>
-
             <StackLayout class="improvementSection">
               <ImprovementList
                 :metrics="improvementMetrics"
@@ -75,10 +44,7 @@
 <script lang="ts">
 import { defineComponent } from "nativescript-vue";
 
-import type {
-  HomeDashboardResponse,
-  AnalyticsSessionItemResponse,
-} from "@/shared";
+import type { AnalyticsSessionItemResponse } from "@/shared";
 import { registerPushToken } from "@/features/register-push-token";
 import {
   ApiError,
@@ -90,7 +56,6 @@ import type { ImprovementMetric, SessionScore } from "@/entities/analytics";
 import AnalyticsPage from "@/pages/analytics";
 import PracticePage from "@/pages/practice";
 import ProfilePage from "@/pages/profile";
-import QuestionsPage from "@/pages/questions";
 import SignInPage from "@/pages/sign-in";
 import BottomNavigation from "@/widgets/bottom-navigation";
 import ImprovementList from "@/widgets/improvement-list";
@@ -143,19 +108,11 @@ export default defineComponent({
       progressSubtitle: "Complete a session to build your readiness score.",
       improvementMetrics: [] as ImprovementMetric[],
       recentSessionScores: [] as SessionScore[],
-      resumeSession: null as HomeDashboardResponse["resume_session"],
     };
   },
   computed: {
     userGreeting(): string {
       return `${this.userName}`;
-    },
-    resumeMeta(): string {
-      if (!this.resumeSession) {
-        return "";
-      }
-
-      return `Question ${this.resumeSession.question_index} of ${this.resumeSession.total_questions}`;
     },
   },
   mounted() {
@@ -198,36 +155,6 @@ export default defineComponent({
           date: formatSessionDate(session.completed_at),
           score: session.score,
         }));
-        this.resumeSession = dashboard.resume_session;
-      } catch (error) {
-        if (error instanceof ApiError && error.status === 401) {
-          this.$navigateTo(SignInPage, { clearHistory: true });
-        }
-      }
-    },
-    async resumePractice() {
-      if (!this.resumeSession) {
-        return;
-      }
-
-      try {
-        const session = await interviewIqApi.startPracticeSession(
-          this.resumeSession.session_id,
-        );
-        this.$navigateTo(QuestionsPage, {
-          clearHistory: true,
-          props: {
-            sessionId: session.id,
-            currentQuestionIndex: session.current_question_index,
-            totalQuestions: session.question_count,
-            timeLimitSec: session.time_limit_sec,
-          },
-          transition: {
-            name: "slideLeft",
-            duration: 280,
-            curve: "easeInOut",
-          },
-        });
       } catch (error) {
         if (error instanceof ApiError && error.status === 401) {
           this.$navigateTo(SignInPage, { clearHistory: true });

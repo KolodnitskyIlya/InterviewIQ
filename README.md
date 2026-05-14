@@ -95,7 +95,8 @@ python -m app.scripts.seed_dataset_questions --limit 1000
 
   By default, HR dataset topics are mapped to practice categories:
   `adaptability`, `career-goals`, `conflict-resolution`, `culture-fit`, `leadership`,
-  `motivation`, `team-collaboration`, and `work-style`.
+  `motivation`, `team-collaboration`, and `work-style`. Dataset roles are stored in
+  `questions.target_role`, so run `alembic upgrade head` before importing.
 
   If you have another dataset with the same JSON shape, choose the application category explicitly:
 

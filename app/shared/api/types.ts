@@ -84,6 +84,7 @@ export interface QuestionItemResponse {
   id: string;
   category: string;
   difficulty: string;
+  target_role?: string | null;
   title: string;
   description: string;
 }

@@ -71,6 +71,7 @@ def question_to_dict(question: Question | None) -> dict | None:
         "id": question.id,
         "category": question.category,
         "difficulty": question.difficulty,
+        "target_role": question.target_role,
         "title": question.title,
         "description": question.description,
     }
@@ -134,6 +135,19 @@ def normalize_category_score(value: int | float) -> int:
     if numeric <= 1:
         numeric *= 100
     return int(max(0, min(100, round(numeric))))
+
+def normalize_target_role(role: str | None) -> str | None:
+    if not role:
+        return None
+
+    aliases = {
+        "backend engineer": "Software Engineer",
+        "data science": "Data Scientist",
+        "ml engineer": "Data Scientist",
+        "product analyst": "Product Manager",
+    }
+    normalized = " ".join(role.strip().split())
+    return aliases.get(normalized.lower(), normalized)
 
 class DatabaseStore:
     @contextmanager
@@ -221,10 +235,16 @@ class DatabaseStore:
         self,
         category: str | None = None,
         difficulty: str | None = None,
+        target_role: str | None = None,
         limit: int = 10,
     ) -> list[dict]:
         with self.db() as db:
-            questions = QuestionRepository(db).list_questions(category=category, difficulty=difficulty, limit=limit)
+            questions = QuestionRepository(db).list_questions(
+                category=category,
+                difficulty=difficulty,
+                target_role=target_role,
+                limit=limit,
+            )
             return [question_to_dict(question) for question in questions if question is not None]
 
     def create_session(
@@ -236,12 +256,27 @@ class DatabaseStore:
         question_count: int,
     ) -> dict:
         with self.db() as db:
+            user = UserRepository(db).get_by_id(user_id)
+            target_role = normalize_target_role(user.target_role if user else None)
             question_repo = QuestionRepository(db)
-            candidates = question_repo.list_questions(category=category, difficulty=difficulty, limit=50)
+            candidates = question_repo.list_questions(
+                category=category,
+                difficulty=difficulty,
+                target_role=target_role,
+                limit=100,
+            )
             if not candidates:
-                candidates = question_repo.list_questions(category=category, limit=50)
+                candidates = question_repo.list_questions(
+                    category=category,
+                    target_role=target_role,
+                    limit=100,
+                )
             if not candidates:
-                candidates = question_repo.list_questions(limit=50)
+                candidates = question_repo.list_questions(category=category, difficulty=difficulty, limit=100)
+            if not candidates:
+                candidates = question_repo.list_questions(category=category, limit=100)
+            if not candidates:
+                candidates = question_repo.list_questions(limit=100)
             if not candidates:
                 raise ValueError("No questions available")
 
@@ -423,13 +458,17 @@ class DatabaseStore:
             if not finished:
                 return {"readiness_score": 0, "average_score": 0, "trend_percent": 0}
 
-            scores = []
+            session_scores = []
+            recent_answer_scores = []
             for session in finished:
                 answers = AnswerRepository(db).list_for_session(session.id)
-                scores.append(session_average(answers))
+                session_scores.append(session_average(answers))
+                for answer in answers:
+                    if answer.analysis:
+                        recent_answer_scores.append(answer.analysis.overall_score)
 
-            avg = average(scores)
-            trend = scores[0] - scores[1] if len(scores) >= 2 else 0
+            avg = average(recent_answer_scores[:20])
+            trend = session_scores[0] - session_scores[1] if len(session_scores) >= 2 else 0
             return {"readiness_score": avg, "average_score": avg, "trend_percent": trend}
 
     def analytics_skills(self, user_id: str) -> list[dict]:

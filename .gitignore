@@ -48,6 +48,7 @@ datasets/
 minio_data/
 minio-data/
 .minio/
+backend/.audio_uploads/
 
 # firebase key
 interviewiq-5ef17-firebase-adminsdk-fbsvc-7eb1828155.json
