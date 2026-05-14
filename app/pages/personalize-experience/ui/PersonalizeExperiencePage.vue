@@ -78,10 +78,14 @@ export default defineComponent({
   data() {
     return {
       roles: [
-        "ML Engineer",
-        "Backend Engineer",
         "Data Scientist",
-        "Product Analyst",
+        "DevOps Engineer",
+        "HR Specialist",
+        "Marketing Associate",
+        "Product Manager",
+        "QA Analyst",
+        "Software Engineer",
+        "UX Designer",
       ] as string[],
       selectedRole: "",
       showRoleList: false,

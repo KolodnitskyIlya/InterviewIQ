@@ -1,6 +1,6 @@
 from collections.abc import Iterator
 from contextlib import contextmanager
-from datetime import datetime
+from datetime import datetime, timedelta, timezone
 import logging
 from pathlib import Path
 import tempfile
@@ -71,6 +71,7 @@ def question_to_dict(question: Question | None) -> dict | None:
         "id": question.id,
         "category": question.category,
         "difficulty": question.difficulty,
+        "target_role": question.target_role,
         "title": question.title,
         "description": question.description,
     }
@@ -122,6 +123,31 @@ def analysis_to_dict(analysis: AnswerAnalysis) -> dict:
         "latency_ms": analysis.latency_ms,
         "transcript": analysis.answer.transcript if analysis.answer else None,
     }
+
+def average(values: list[int]) -> int:
+    return int(sum(values) / len(values)) if values else 0
+
+def session_average(answers: list[Answer]) -> int:
+    return average([answer.analysis.overall_score for answer in answers if answer.analysis])
+
+def normalize_category_score(value: int | float) -> int:
+    numeric = float(value)
+    if numeric <= 1:
+        numeric *= 100
+    return int(max(0, min(100, round(numeric))))
+
+def normalize_target_role(role: str | None) -> str | None:
+    if not role:
+        return None
+
+    aliases = {
+        "backend engineer": "Software Engineer",
+        "data science": "Data Scientist",
+        "ml engineer": "Data Scientist",
+        "product analyst": "Product Manager",
+    }
+    normalized = " ".join(role.strip().split())
+    return aliases.get(normalized.lower(), normalized)
 
 class DatabaseStore:
     @contextmanager
@@ -209,10 +235,16 @@ class DatabaseStore:
         self,
         category: str | None = None,
         difficulty: str | None = None,
+        target_role: str | None = None,
         limit: int = 10,
     ) -> list[dict]:
         with self.db() as db:
-            questions = QuestionRepository(db).list_questions(category=category, difficulty=difficulty, limit=limit)
+            questions = QuestionRepository(db).list_questions(
+                category=category,
+                difficulty=difficulty,
+                target_role=target_role,
+                limit=limit,
+            )
             return [question_to_dict(question) for question in questions if question is not None]
 
     def create_session(
@@ -224,10 +256,27 @@ class DatabaseStore:
         question_count: int,
     ) -> dict:
         with self.db() as db:
+            user = UserRepository(db).get_by_id(user_id)
+            target_role = normalize_target_role(user.target_role if user else None)
             question_repo = QuestionRepository(db)
-            candidates = question_repo.list_questions(category=category, difficulty=difficulty, limit=50)
+            candidates = question_repo.list_questions(
+                category=category,
+                difficulty=difficulty,
+                target_role=target_role,
+                limit=100,
+            )
             if not candidates:
-                candidates = question_repo.list_questions(limit=50)
+                candidates = question_repo.list_questions(
+                    category=category,
+                    target_role=target_role,
+                    limit=100,
+                )
+            if not candidates:
+                candidates = question_repo.list_questions(category=category, difficulty=difficulty, limit=100)
+            if not candidates:
+                candidates = question_repo.list_questions(category=category, limit=100)
+            if not candidates:
+                candidates = question_repo.list_questions(limit=100)
             if not candidates:
                 raise ValueError("No questions available")
 
@@ -409,34 +458,78 @@ class DatabaseStore:
             if not finished:
                 return {"readiness_score": 0, "average_score": 0, "trend_percent": 0}
 
-            scores = []
+            session_scores = []
+            recent_answer_scores = []
             for session in finished:
                 answers = AnswerRepository(db).list_for_session(session.id)
-                answer_scores = [answer.analysis.overall_score for answer in answers if answer.analysis]
-                scores.append(int(sum(answer_scores) / len(answer_scores)) if answer_scores else 0)
+                session_scores.append(session_average(answers))
+                for answer in answers:
+                    if answer.analysis:
+                        recent_answer_scores.append(answer.analysis.overall_score)
 
-            avg = int(sum(scores) / len(scores)) if scores else 0
-            trend = scores[0] - scores[1] if len(scores) >= 2 else 0
+            avg = average(recent_answer_scores[:20])
+            trend = session_scores[0] - session_scores[1] if len(session_scores) >= 2 else 0
             return {"readiness_score": avg, "average_score": avg, "trend_percent": trend}
 
     def analytics_skills(self, user_id: str) -> list[dict]:
-        return [
-            {"name": "Technical", "score": 72, "change": 4},
-            {"name": "Behavioral", "score": 68, "change": 6},
-            {"name": "Structure", "score": 64, "change": 3},
-            {"name": "Confidence", "score": 75, "change": 2},
-        ]
+        with self.db() as db:
+            finished = PracticeSessionRepository(db).list_finished_for_user(user_id)
+            buckets: dict[str, list[int]] = {}
+            previous_buckets: dict[str, list[int]] = {}
+
+            for index, session in enumerate(finished):
+                answers = AnswerRepository(db).list_for_session(session.id)
+                for answer in answers:
+                    if not answer.analysis:
+                        continue
+                    for name, raw_score in answer.analysis.scores_by_category.items():
+                        label = str(name).replace("_", " ").title()
+                        score = normalize_category_score(raw_score)
+                        buckets.setdefault(label, []).append(score)
+                        if index > 0:
+                            previous_buckets.setdefault(label, []).append(score)
+
+            if not buckets and not previous_buckets:
+                return []
+
+            skill_names = sorted(set(buckets) | set(previous_buckets))
+            return [
+                {
+                    "name": name,
+                    "score": average(buckets.get(name, [])),
+                    "change": average(buckets.get(name, [])) - average(previous_buckets.get(name, [])),
+                }
+                for name in skill_names
+            ]
 
     def analytics_weekly_progress(self, user_id: str) -> list[dict]:
-        return [
-            {"day": "Mon", "score": 62},
-            {"day": "Tue", "score": 64},
-            {"day": "Wed", "score": 67},
-            {"day": "Thu", "score": 70},
-            {"day": "Fri", "score": 72},
-            {"day": "Sat", "score": 74},
-            {"day": "Sun", "score": 76},
+        today = datetime.now(timezone.utc).date()
+        week_start = today - timedelta(days=today.weekday())
+        points = [
+            {"day": (week_start + timedelta(days=offset)).strftime("%a"), "score": 0}
+            for offset in range(7)
         ]
+
+        with self.db() as db:
+            finished = PracticeSessionRepository(db).list_finished_for_user(user_id)
+            scores_by_day: dict[int, list[int]] = {offset: [] for offset in range(7)}
+
+            for session in finished:
+                if not session.finished_at:
+                    continue
+                finished_at = session.finished_at
+                if finished_at.tzinfo is None:
+                    finished_at = finished_at.replace(tzinfo=timezone.utc)
+                session_date = finished_at.date()
+                if session_date < week_start or session_date > today:
+                    continue
+                answers = AnswerRepository(db).list_for_session(session.id)
+                scores_by_day[(session_date - week_start).days].append(session_average(answers))
+
+            for offset, scores in scores_by_day.items():
+                points[offset]["score"] = average(scores)
+
+        return points
 
     def analytics_sessions(self, user_id: str) -> list[dict]:
         with self.db() as db:
@@ -444,8 +537,11 @@ class DatabaseStore:
             items = []
             for session in finished:
                 answers = AnswerRepository(db).list_for_session(session.id)
-                answer_scores = [answer.analysis.overall_score for answer in answers if answer.analysis]
-                score = int(sum(answer_scores) / len(answer_scores)) if answer_scores else 0
+                score = session_average(answers)
+                if session.started_at and session.finished_at:
+                    duration_min = max(1, int((session.finished_at - session.started_at).total_seconds() / 60))
+                else:
+                    duration_min = max(1, int((session.time_limit_sec * session.question_count) / 60))
                 items.append(
                     {
                         "session_id": session.id,
@@ -453,7 +549,7 @@ class DatabaseStore:
                         "score": score,
                         "completed_at": iso(session.finished_at),
                         "questions_count": session.question_count,
-                        "duration_min": max(1, int((session.time_limit_sec * session.question_count) / 60)),
+                        "duration_min": duration_min,
                     }
                 )
             return items
@@ -479,9 +575,8 @@ class DatabaseStore:
                 "subtitle": "Keep practicing to improve consistency",
             },
             "areas_to_improve": [
-                {"skill": "Structure", "score": 64},
-                {"skill": "Behavioral depth", "score": 68},
-                {"skill": "Specificity", "score": 70},
+                {"skill": item["name"], "score": item["score"]}
+                for item in sorted(self.analytics_skills(user_id), key=lambda item: item["score"])[:3]
             ],
             "recent_sessions": history[:3],
             "resume_session": resume,

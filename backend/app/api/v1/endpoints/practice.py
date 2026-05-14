@@ -1,4 +1,5 @@
 from fastapi import APIRouter, Depends, HTTPException, Query
+from botocore.exceptions import BotoCoreError, ClientError
 from app.core.deps import get_current_user
 from app.schemas.answer import (
     AnswerAnalysisResponse,
@@ -36,10 +37,19 @@ def _session_state(session: dict) -> dict:
 @router.get("/practice/config", response_model=PracticeConfigResponse)
 def practice_config() -> dict:
     return {
-        "categories": ["technical", "behavioral", "system-design", "hr"],
+        "categories": [
+            "adaptability",
+            "career-goals",
+            "conflict-resolution",
+            "culture-fit",
+            "leadership",
+            "motivation",
+            "team-collaboration",
+            "work-style",
+        ],
         "difficulties": ["easy", "medium", "hard"],
         "time_limits_sec": [30, 45, 60, 90, 120],
-        "question_count_options": [3, 5, 10],
+        "question_count_options": [5, 10, 15, 20],
     }
 
 @router.post("/practice/sessions", response_model=SessionStateResponse)
@@ -164,6 +174,8 @@ def upload_answer_audio(
         )
     except ValueError as exc:
         raise HTTPException(status_code=400, detail="Invalid audio payload") from exc
+    except (BotoCoreError, ClientError, OSError) as exc:
+        raise HTTPException(status_code=503, detail="Audio storage is unavailable") from exc
 
 @router.get(
     "/practice/sessions/{session_id}/answers/{answer_id}/analysis",

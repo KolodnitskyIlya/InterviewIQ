@@ -1,7 +1,8 @@
 import hashlib
 import logging
+import re
 import time
-from ml.base import AnswerAnalysisInput, AnswerAnalysisResult
+from ml.base import RUBRIC_VERSION, AnswerAnalysisInput, AnswerAnalysisResult
 from ml.baseline import BaselineAnalyzer
 from ml.gigachat import GigaChatAnalyzer
 
@@ -44,10 +45,9 @@ class AnalyzerService:
 
         started = time.perf_counter()
         try:
-            has_text = bool((safe_payload.answer_text or safe_payload.transcript or "").strip())
-            if not has_text and not safe_payload.has_audio:
-                result = self.baseline.analyze(safe_payload)
-                result.error_message = "Empty answer without audio was scored by baseline only."
+            zero_reason = self._zero_score_reason(safe_payload)
+            if zero_reason:
+                result = self._zero_score_result(zero_reason)
             elif self.provider == "gigachat":
                 result = self.gigachat.analyze(safe_payload)
             else:
@@ -87,5 +87,60 @@ class AnalyzerService:
             ]
         )
         return hashlib.sha256(raw.encode("utf-8")).hexdigest()
+
+    def _zero_score_reason(self, payload: AnswerAnalysisInput) -> str | None:
+        answer = (payload.transcript or payload.answer_text or "").strip()
+        if not answer:
+            return "Empty answer."
+
+        words = re.findall(r"[A-Za-zА-Яа-я0-9]+", answer.lower())
+        if len(words) < 4:
+            return "Answer is too short to evaluate."
+
+        unique_ratio = len(set(words)) / len(words)
+        filler_words = {"bla", "blah", "test", "asdf", "qwerty", "empty", "nothing"}
+        filler_count = sum(1 for word in words if word in filler_words)
+        if filler_count / len(words) >= 0.5:
+            return "Answer looks like placeholder text."
+
+        if len(words) >= 3 and unique_ratio <= 0.35:
+            return "Answer is mostly repeated words."
+
+        meaningful_chars = re.findall(r"[A-Za-zА-Яа-я]", answer)
+        if len(meaningful_chars) < 12:
+            return "Answer has too little meaningful text."
+
+        return None
+
+    def _zero_score_result(self, reason: str) -> AnswerAnalysisResult:
+        return AnswerAnalysisResult(
+            overall_score=0,
+            scores_by_category={
+                "structure": 0.0,
+                "relevance": 0.0,
+                "specificity": 0.0,
+                "confidence": 0.0,
+                "completeness": 0.0,
+            },
+            strengths=["No scorable answer was provided"],
+            to_improve=[
+                "Provide a real answer that addresses the question",
+                "Use a clear situation, action, and result",
+                "Add concrete details instead of placeholder text",
+            ],
+            quick_tips=[
+                "Write at least a few complete sentences",
+                "Answer the exact question",
+                "Include one specific example or result",
+            ],
+            ideal_answer_example=(
+                "A strong answer should describe the situation, explain what you did, "
+                "and finish with a concrete outcome or lesson."
+            ),
+            explanation=reason,
+            provider="baseline",
+            rubric_version=RUBRIC_VERSION,
+            error_message=reason,
+        )
 
 analyzer_service = AnalyzerService()

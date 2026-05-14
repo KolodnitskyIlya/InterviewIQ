@@ -3,11 +3,16 @@ import type {
   AuthMeResponse,
   AuthResponse,
   AnswerAnalysisResponse,
+  AnalyticsOverviewResponse,
+  AnalyticsSessionsResponse,
+  AnalyticsSkillsResponse,
+  AnalyticsWeeklyProgressResponse,
   AudioUploadRequest,
   AudioUploadResponse,
   CreateSessionRequest,
   DeviceTokenRegisterRequest,
   DeviceTokenResponse,
+  HomeDashboardResponse,
   OnboardingOptionsResponse,
   ReminderTestResponse,
   OnboardingStateResponse,
@@ -161,5 +166,33 @@ export const interviewIqApi = {
         body: "Time to practice your interview answers.",
       },
     });
+  },
+  getHomeDashboard() {
+    return request<HomeDashboardResponse>("/dashboard/home", {
+      auth: true,
+    });
+  },
+  getAnalyticsOverview() {
+    return request<AnalyticsOverviewResponse>("/analytics/overview", {
+      auth: true,
+    });
+  },
+  getAnalyticsSkills() {
+    return request<AnalyticsSkillsResponse>("/analytics/skills", {
+      auth: true,
+    });
+  },
+  getAnalyticsWeeklyProgress() {
+    return request<AnalyticsWeeklyProgressResponse>("/analytics/weekly-progress", {
+      auth: true,
+    });
+  },
+  getAnalyticsSessions(page = 1, pageSize = 20) {
+    return request<AnalyticsSessionsResponse>(
+      `/analytics/sessions?page=${page}&page_size=${pageSize}`,
+      {
+        auth: true,
+      },
+    );
   },
 };

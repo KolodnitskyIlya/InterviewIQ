@@ -13,9 +13,27 @@ router = APIRouter(tags=["users"])
 @router.get("/onboarding/options", response_model=OnboardingOptionsResponse)
 def onboarding_options() -> dict:
     return {
-        "roles": ["ML Engineer", "Backend Engineer", "Data Scientist", "Product Analyst"],
+        "roles": [
+            "Data Scientist",
+            "DevOps Engineer",
+            "HR Specialist",
+            "Marketing Associate",
+            "Product Manager",
+            "QA Analyst",
+            "Software Engineer",
+            "UX Designer",
+        ],
         "experience_levels": ["junior", "middle", "senior"],
-        "categories": ["technical", "behavioral", "system-design", "hr"],
+        "categories": [
+            "adaptability",
+            "career-goals",
+            "conflict-resolution",
+            "culture-fit",
+            "leadership",
+            "motivation",
+            "team-collaboration",
+            "work-style",
+        ],
     }
 
 @router.put("/users/me/onboarding", response_model=OnboardingStateResponse)

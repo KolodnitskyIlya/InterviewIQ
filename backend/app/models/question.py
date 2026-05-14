@@ -12,6 +12,7 @@ class Question(Base):
     id: Mapped[str] = mapped_column(String(32), primary_key=True)
     category: Mapped[str] = mapped_column(String(50), index=True, nullable=False)
     difficulty: Mapped[str] = mapped_column(String(30), index=True, nullable=False)
+    target_role: Mapped[str | None] = mapped_column(String(120), index=True, nullable=True)
     title: Mapped[str] = mapped_column(String(255), nullable=False)
     description: Mapped[str] = mapped_column(Text, nullable=False)
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now(), nullable=False)

@@ -1,5 +1,5 @@
 from __future__ import annotations
-from sqlalchemy import select
+from sqlalchemy import func, select
 from sqlalchemy.orm import Session
 from app.models.question import Question
 
@@ -11,13 +11,16 @@ class QuestionRepository:
         self,
         category: str | None = None,
         difficulty: str | None = None,
+        target_role: str | None = None,
         limit: int = 10,
     ) -> list[Question]:
-        stmt = select(Question).order_by(Question.id).limit(limit)
+        stmt = select(Question).order_by(func.random()).limit(limit)
         if category:
             stmt = stmt.where(Question.category == category)
         if difficulty:
             stmt = stmt.where(Question.difficulty == difficulty)
+        if target_role:
+            stmt = stmt.where(Question.target_role == target_role)
         return list(self.db.scalars(stmt).all())
 
     def get(self, question_id: str) -> Question | None:
@@ -35,6 +38,7 @@ class QuestionRepository:
 
             question.category = item["category"]
             question.difficulty = item["difficulty"]
+            question.target_role = item.get("target_role")
             question.title = item["title"]
             question.description = item["description"]
         self.db.flush()

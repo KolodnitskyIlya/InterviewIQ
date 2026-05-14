@@ -390,7 +390,7 @@ export default defineComponent({
 .cardItem {
   margin-top: 8;
   font-size: 14;
-  line-height: 20;
+  line-height: 16;
   font-family: "Poppins";
 }
 

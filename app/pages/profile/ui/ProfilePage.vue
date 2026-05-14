@@ -44,9 +44,9 @@ const defaultProfile: UserProfile = {
 };
 
 const defaultStats: ProfileStat[] = [
-  { value: "-", label: "Questions" },
-  { value: "-", label: "Sessions" },
-  { value: "-", label: "Avg Score" },
+  { value: "0", label: "Questions" },
+  { value: "0", label: "Sessions" },
+  { value: "0%", label: "Avg Score" },
 ];
 
 const defaultJobInfo: JobInfoItem[] = [
@@ -114,9 +114,26 @@ export default defineComponent({
       }
 
       try {
-        const profile = await interviewIqApi.getProfile();
+        const [profile, overview, sessions] = await Promise.all([
+          interviewIqApi.getProfile(),
+          interviewIqApi.getAnalyticsOverview(),
+          interviewIqApi.getAnalyticsSessions(1, 100),
+        ]);
 
         this.profileData = toUserProfile(profile.full_name, profile.email);
+        this.statsData = [
+          {
+            value: String(
+              sessions.items.reduce(
+                (total, session) => total + session.questions_count,
+                0,
+              ),
+            ),
+            label: "Questions",
+          },
+          { value: String(sessions.total), label: "Sessions" },
+          { value: `${overview.average_score}%`, label: "Avg Score" },
+        ];
         this.jobInfoData = [
           { label: "Target Role", value: profile.target_role || "-" },
           {

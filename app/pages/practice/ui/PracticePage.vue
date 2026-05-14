@@ -27,6 +27,21 @@
             @select="selectTime"
           />
 
+          <Label text="Number of Questions" class="sectionTitle questionCountTitle" />
+          <FlexboxLayout class="countOptions" justifyContent="space-between">
+            <Button
+              v-for="count in questionCountOptions"
+              :key="count"
+              :text="String(count)"
+              :class="
+                selectedQuestionCount === count
+                  ? 'selectedCountButton countButton'
+                  : 'countButton'
+              "
+              @tap="selectQuestionCount(count)"
+            />
+          </FlexboxLayout>
+
           <Button
             text="▷ Start Practice"
             class="startButton"
@@ -93,9 +108,11 @@ export default defineComponent({
       selectedCategory: "" as PracticeSetupContext["selectedCategory"],
       selectedDifficulty: "" as PracticeSetupContext["selectedDifficulty"],
       selectedTime: "",
+      selectedQuestionCount: 10,
       canStartPractice: false,
       isStarting: false,
       timeOptions: ["30 sec", "45 sec", "60 sec", "90 sec", "120 sec"],
+      questionCountOptions: [5, 10, 15, 20],
       practiceActor: null as PracticeSetupActor | null,
       practiceSubscription: null as { unsubscribe: () => void } | null,
     };
@@ -107,6 +124,7 @@ export default defineComponent({
       this.selectedCategory = snapshot.context.selectedCategory;
       this.selectedDifficulty = snapshot.context.selectedDifficulty;
       this.selectedTime = snapshot.context.selectedTime;
+      this.selectedQuestionCount = snapshot.context.selectedQuestionCount;
       this.canStartPractice = snapshot.matches("ready");
     });
     actor.start();
@@ -155,6 +173,9 @@ export default defineComponent({
     selectTime(option: string) {
       this.practiceActor?.send({ type: "SELECT_TIME", time: option });
     },
+    selectQuestionCount(count: number) {
+      this.practiceActor?.send({ type: "SELECT_QUESTION_COUNT", count });
+    },
     async startPractice() {
       if (!this.canStartPractice || this.isStarting) {
         return;
@@ -164,10 +185,10 @@ export default defineComponent({
       try {
         const timeLimitSec = parseTimeLimitToSeconds(this.selectedTime || "60 sec");
         const created = await interviewIqApi.createPracticeSession({
-          category: this.selectedCategory || "technical",
+          category: this.selectedCategory || "adaptability",
           difficulty: this.selectedDifficulty || "easy",
           time_limit_sec: timeLimitSec,
-          question_count: 3,
+          question_count: this.selectedQuestionCount,
         });
         const started = await interviewIqApi.startPracticeSession(created.id);
 
@@ -254,6 +275,33 @@ export default defineComponent({
 
 .timePicker {
   margin-top: 8;
+}
+
+.questionCountTitle {
+  margin-top: 18;
+}
+
+.countOptions {
+  margin-top: 10;
+}
+
+.countButton {
+  width: 68;
+  height: 52;
+  border-radius: 18;
+  background-color: #ffffff;
+  border-width: 1;
+  border-color: #d1d5db;
+  color: #111827;
+  font-size: 17;
+  font-weight: 600;
+  font-family: "Poppins";
+}
+
+.selectedCountButton {
+  background-color: #ede9fe;
+  border-color: #6366f1;
+  color: #4f46e5;
 }
 
 .startButton {

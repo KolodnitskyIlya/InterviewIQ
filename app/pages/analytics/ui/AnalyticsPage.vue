@@ -34,19 +34,39 @@ import type {
   SkillMetric,
   WeeklyProgressPoint,
 } from "@/entities/analytics";
-import {
-  readinessSummary,
-  recentSessions,
-  skillsBreakdown,
-  weeklyProgress,
-} from "@/entities/analytics";
+import { ApiError, interviewIqApi, type AnalyticsSessionItemResponse } from "@/shared";
 import HomePage from "@/pages/home";
 import PracticePage from "@/pages/practice";
 import ProfilePage from "@/pages/profile";
+import SignInPage from "@/pages/sign-in";
 import BottomNavigation from "@/widgets/bottom-navigation";
 import RecentSessions from "@/widgets/recent-sessions";
 import ScoreSummary from "@/widgets/score-summary";
 import SkillsChart from "@/widgets/skills-chart";
+
+function formatSessionDate(value: string | null): string {
+  if (!value) {
+    return "Recently";
+  }
+
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) {
+    return "Recently";
+  }
+
+  return date.toLocaleDateString("en-US", {
+    month: "short",
+    day: "numeric",
+    year: "numeric",
+  });
+}
+
+function sessionTitle(session: AnalyticsSessionItemResponse): string {
+  return session.category
+    .split("-")
+    .map((part) => part.charAt(0).toUpperCase() + part.slice(1))
+    .join(" ");
+}
 
 export default defineComponent({
   name: "AnalyticsPage",
@@ -58,13 +78,56 @@ export default defineComponent({
   },
   data() {
     return {
-      summary: readinessSummary as ReadinessSummary,
-      weekly: weeklyProgress as WeeklyProgressPoint[],
-      skills: skillsBreakdown as SkillMetric[],
-      sessions: recentSessions as DetailedSession[],
+      summary: {
+        label: "Overall Readiness",
+        value: 0,
+        trend: "0%",
+        caption: "vs previous session",
+      } as ReadinessSummary,
+      weekly: [] as WeeklyProgressPoint[],
+      skills: [] as SkillMetric[],
+      sessions: [] as DetailedSession[],
     };
   },
+  mounted() {
+    void this.loadAnalytics();
+  },
   methods: {
+    async loadAnalytics() {
+      try {
+        const [overview, weekly, skills, sessions] = await Promise.all([
+          interviewIqApi.getAnalyticsOverview(),
+          interviewIqApi.getAnalyticsWeeklyProgress(),
+          interviewIqApi.getAnalyticsSkills(),
+          interviewIqApi.getAnalyticsSessions(1, 10),
+        ]);
+
+        this.summary = {
+          label: "Overall Readiness",
+          value: overview.readiness_score,
+          trend: `${overview.trend_percent >= 0 ? "+" : ""}${overview.trend_percent}%`,
+          caption: "vs previous session",
+        };
+        this.weekly = weekly.points.map((point) => ({
+          day: point.day,
+          value: point.score,
+        }));
+        this.skills = skills.items.map((skill) => ({
+          label: skill.name,
+          value: skill.score,
+        }));
+        this.sessions = sessions.items.map((session) => ({
+          title: sessionTitle(session),
+          date: formatSessionDate(session.completed_at),
+          meta: `${session.questions_count} questions | ${session.duration_min} min`,
+          score: session.score,
+        }));
+      } catch (error) {
+        if (error instanceof ApiError && error.status === 401) {
+          this.$navigateTo(SignInPage, { clearHistory: true });
+        }
+      }
+    },
     openHome() {
       this.$navigateTo(HomePage, {
         clearHistory: true,

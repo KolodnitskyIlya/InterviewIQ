@@ -84,6 +84,7 @@ export interface QuestionItemResponse {
   id: string;
   category: string;
   difficulty: string;
+  target_role?: string | null;
   title: string;
   description: string;
 }
@@ -184,4 +185,63 @@ export interface ReminderTestResponse {
     message_id: string | null;
     error: string | null;
   }>;
+}
+
+export interface AnalyticsOverviewResponse {
+  readiness_score: number;
+  average_score: number;
+  trend_percent: number;
+}
+
+export interface AnalyticsSkillItemResponse {
+  name: string;
+  score: number;
+  change: number;
+}
+
+export interface AnalyticsSkillsResponse {
+  items: AnalyticsSkillItemResponse[];
+}
+
+export interface AnalyticsWeeklyPointResponse {
+  day: string;
+  score: number;
+}
+
+export interface AnalyticsWeeklyProgressResponse {
+  points: AnalyticsWeeklyPointResponse[];
+}
+
+export interface AnalyticsSessionItemResponse {
+  session_id: string;
+  category: string;
+  score: number;
+  completed_at: string | null;
+  questions_count: number;
+  duration_min: number;
+}
+
+export interface AnalyticsSessionsResponse {
+  items: AnalyticsSessionItemResponse[];
+  total: number;
+  page: number;
+  page_size: number;
+}
+
+export interface HomeDashboardResponse {
+  progress_card: {
+    value: number;
+    trend: string;
+    subtitle: string;
+  };
+  areas_to_improve: Array<{
+    skill: string;
+    score: number;
+  }>;
+  recent_sessions: AnalyticsSessionItemResponse[];
+  resume_session: {
+    session_id: string;
+    question_index: number;
+    total_questions: number;
+  } | null;
 }
