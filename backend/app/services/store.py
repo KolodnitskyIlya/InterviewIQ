@@ -149,6 +149,24 @@ def normalize_target_role(role: str | None) -> str | None:
     normalized = " ".join(role.strip().split())
     return aliases.get(normalized.lower(), normalized)
 
+def normalize_question_title(title: str) -> str:
+    return " ".join(title.strip().lower().split())
+
+def append_unique_questions(
+    selected: list[Question],
+    candidates: list[Question],
+    seen_titles: set[str],
+    question_count: int,
+) -> None:
+    for question in candidates:
+        title_key = normalize_question_title(question.title)
+        if title_key in seen_titles:
+            continue
+        selected.append(question)
+        seen_titles.add(title_key)
+        if len(selected) >= question_count:
+            return
+
 class DatabaseStore:
     @contextmanager
     def db(self) -> Iterator[Session]:
@@ -259,28 +277,27 @@ class DatabaseStore:
             user = UserRepository(db).get_by_id(user_id)
             target_role = normalize_target_role(user.target_role if user else None)
             question_repo = QuestionRepository(db)
-            candidates = question_repo.list_questions(
-                category=category,
-                difficulty=difficulty,
-                target_role=target_role,
-                limit=100,
-            )
-            if not candidates:
-                candidates = question_repo.list_questions(
-                    category=category,
-                    target_role=target_role,
-                    limit=100,
-                )
-            if not candidates:
-                candidates = question_repo.list_questions(category=category, difficulty=difficulty, limit=100)
-            if not candidates:
-                candidates = question_repo.list_questions(category=category, limit=100)
-            if not candidates:
-                candidates = question_repo.list_questions(limit=100)
-            if not candidates:
+            selected: list[Question] = []
+            seen_titles: set[str] = set()
+            limit = max(100, question_count * 25)
+            pools = [
+                {"category": category, "difficulty": difficulty, "target_role": target_role},
+                {"category": category, "target_role": target_role},
+                {"target_role": target_role},
+                {"category": category, "difficulty": difficulty},
+                {"category": category},
+                {},
+            ]
+
+            for filters in pools:
+                candidates = question_repo.list_questions(limit=limit, **filters)
+                append_unique_questions(selected, candidates, seen_titles, question_count)
+                if len(selected) >= question_count:
+                    break
+
+            if not selected:
                 raise ValueError("No questions available")
 
-            selected = candidates[: max(1, min(question_count, len(candidates)))]
             session = PracticeSessionRepository(db).create(
                 user_id=user_id,
                 category=category,
